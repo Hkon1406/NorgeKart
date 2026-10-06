@@ -5,104 +5,308 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fylkesblitz Norge 2026</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0b0b0b;color:#fff;font-family:system-ui,-apple-system,sans-serif}
-main{max-width:900px;margin:auto;padding:20px}.top{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
-h1{font-size:28px;margin:0}.muted{color:#aaa}.timer{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}
+*{box-sizing:border-box}
+body{margin:0;background:#0b0b0b;color:#fff;font-family:system-ui,-apple-system,sans-serif}
+main{max-width:900px;margin:auto;padding:20px}
+.top{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+h1{font-size:28px;margin:0}
+.muted{color:#aaa}
+.timer{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}
 .map{margin-top:16px;background:#000;border:1px solid #333;border-radius:14px;padding:8px}
-svg{display:block;width:100%;height:auto}.county{fill:#111;stroke:#aaa;stroke-width:1.2;vector-effect:non-scaling-stroke}
-.county.found{fill:#20a050;stroke:#fff}.controls{display:flex;gap:8px;margin-top:12px}
+svg{display:block;width:100%;height:auto}
+.county{fill:#111;stroke:#aaa;stroke-width:1.2;vector-effect:non-scaling-stroke}
+.county.found{fill:#20a050;stroke:#fff}
+.controls{display:flex;gap:8px;margin-top:12px}
 input{flex:1;min-width:0;height:50px;border-radius:10px;border:1px solid #444;background:#171717;color:#fff;padding:0 14px;font-size:17px}
 button{height:50px;border:0;border-radius:10px;padding:0 18px;font-weight:700;cursor:pointer;background:#fff;color:#111}
-.status{min-height:25px;margin-top:9px;color:#bbb}.bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;color:#aaa}
-@media(max-width:520px){main{padding:12px}h1{font-size:23px}.timer{font-size:28px}}
+.status{min-height:25px;margin-top:9px;color:#bbb}
+.bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;color:#aaa}
+@media(max-width:520px){
+ main{padding:12px}
+ h1{font-size:23px}
+ .timer{font-size:28px}
+}
 </style>
 </head>
+
 <body>
 <main>
-  <div class="top">
-    <div><h1>🇳🇴 Fylkesblitz</h1><div class="muted">Norge · fylkesinndeling 2026</div></div>
-    <div id="timer" class="timer">02:00</div>
-  </div>
-  <div class="map"><svg id="map" viewBox="0 0 700 1050" aria-label="Kart over Norge med fylkesgrenser"></svg></div>
-  <form id="form" class="controls">
-    <input id="answer" autocomplete="off" spellcheck="false" placeholder="Skriv et fylke …" aria-label="Skriv fylke">
-    <button>OK</button>
-  </form>
-  <div id="status" class="status">Skriv inn fylkene så raskt du kan.</div>
-  <div class="bottom"><span><b id="score">0</b> / 15 fylker</span><button id="restart" type="button">Start på nytt</button></div>
-</main>
-<script>
-const COUNTIES=["Agder","Akershus","Buskerud","Finnmark","Innlandet","Møre og Romsdal","Nordland","Oslo","Rogaland","Telemark","Troms","Trøndelag","Vestfold","Vestland","Østfold"];
-const aliases={"more og romsdal":"Møre og Romsdal","ostfold":"Østfold","trondelag":"Trøndelag"};
-const norm=s=>s.toLocaleLowerCase("nb-NO").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9æøå ]/g,"").replace(/\s+/g," ").trim();
 
-let features=[], found=new Set(), seconds=120, timerId=null, running=false;
-const svg=document.getElementById("map"), input=document.getElementById("answer");
-const timer=document.getElementById("timer"), score=document.getElementById("score"), status=document.getElementById("status");
+<div class="top">
+  <div>
+    <h1>🇳🇴 Fylkesblitz</h1>
+    <div class="muted">Norge · fylkesinndeling 2026</div>
+  </div>
+  <div id="timer" class="timer">02:00</div>
+</div>
+
+<div class="map">
+  <svg id="map" viewBox="0 0 700 1050"
+       aria-label="Kart over Norge med fylkesgrenser"></svg>
+</div>
+
+<form id="form" class="controls">
+  <input id="answer" autocomplete="off" spellcheck="false"
+         placeholder="Skriv et fylke …" aria-label="Skriv fylke">
+  <button>OK</button>
+</form>
+
+<div id="status" class="status">
+  Skriv inn fylkene så raskt du kan.
+</div>
+
+<div class="bottom">
+  <span><b id="score">0</b> / 15 fylker</span>
+  <button id="restart" type="button">Start på nytt</button>
+</div>
+
+</main>
+
+<script>
+const COUNTIES=[
+"Agder","Akershus","Buskerud","Finnmark","Innlandet",
+"Møre og Romsdal","Nordland","Oslo","Rogaland","Telemark",
+"Troms","Trøndelag","Vestfold","Vestland","Østfold"
+];
+
+const aliases={
+"more og romsdal":"Møre og Romsdal",
+"ostfold":"Østfold",
+"trondelag":"Trøndelag"
+};
+
+const norm=s=>s.toLocaleLowerCase("nb-NO")
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/[^a-z0-9æøå ]/g,"")
+.replace(/\s+/g," ")
+.trim();
+
+let features=[];
+let found=new Set();
+let seconds=120;
+let timerId=null;
+let running=false;
+
+const svg=document.getElementById("map");
+const input=document.getElementById("answer");
+const timer=document.getElementById("timer");
+const score=document.getElementById("score");
+const status=document.getElementById("status");
 
 function projectAll(fs){
   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+
   function visit(coords){
-    if(typeof coords[0]==="number"){minX=Math.min(minX,coords[0]);maxX=Math.max(maxX,coords[0]);minY=Math.min(minY,coords[1]);maxY=Math.max(maxY,coords[1]);return}
+    if(typeof coords[0]==="number"){
+      minX=Math.min(minX,coords[0]);
+      maxX=Math.max(maxX,coords[0]);
+      minY=Math.min(minY,coords[1]);
+      maxY=Math.max(maxY,coords[1]);
+      return;
+    }
     coords.forEach(visit);
   }
+
   fs.forEach(f=>visit(f.geometry.coordinates));
-  const pad=25, sx=(700-2*pad)/(maxX-minX), sy=(1050-2*pad)/(maxY-minY), s=Math.min(sx,sy);
+
+  const pad=25;
+  const sx=(700-2*pad)/(maxX-minX);
+  const sy=(1050-2*pad)/(maxY-minY);
+  const s=Math.min(sx,sy);
+
   const ox=pad+(700-2*pad-(maxX-minX)*s)/2-minX*s;
   const oy=pad+(1050-2*pad-(maxY-minY)*s)+minY*s;
-  return p=>[p[0]*s+ox,1050-(p[1]*s+oy)];
+
+  return p=>[
+    p[0]*s+ox,
+    1050-(p[1]*s+oy)
+  ];
 }
+
 function makePath(g,proj){
-  const ring=r=>r.map((p,i)=>{const q=proj(p);return(i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)}).join(" ")+" Z";
-  if(g.type==="Polygon")return g.coordinates.map(ring).join(" ");
-  if(g.type==="MultiPolygon")return g.coordinates.map(p=>p.map(ring).join(" ")).join(" ");
+
+  const ring=r=>r.map((p,i)=>{
+    const q=proj(p);
+    return (i?"L":"M")+
+      q[0].toFixed(1)+" "+
+      q[1].toFixed(1);
+  }).join(" ")+" Z";
+
+  if(g.type==="Polygon")
+    return g.coordinates.map(ring).join(" ");
+
+  if(g.type==="MultiPolygon")
+    return g.coordinates.map(p=>p.map(ring).join(" ")).join(" ");
+
   return "";
 }
+
 function draw(){
+
   svg.innerHTML="";
+
   const proj=projectAll(features);
+
   features.forEach(f=>{
-    const name=f.properties?.fylkesnavn||f.properties?.fylkesnavn_norsk||f.properties?.navn||f.properties?.name;
+
+    const name=
+      f.properties?.fylkesnavn ||
+      f.properties?.fylkesnavn_norsk ||
+      f.properties?.navn ||
+      f.properties?.name;
+
     if(!name)return;
-    const p=document.createElementNS("http://www.w3.org/2000/svg","path");
-    p.setAttribute("d",makePath(f.geometry,proj)); p.className.baseVal="county"; p.dataset.name=name;
+
+    const p=document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "path"
+    );
+
+    p.setAttribute("d",makePath(f.geometry,proj));
+    p.classList.add("county");
+    p.dataset.name=name;
+
     svg.appendChild(p);
   });
 }
+
 async function loadMap(){
-  // Public Kartverket/Geonorge REST API. The API supplies current administrative units.
-  const urls=[
-    "https://ws.geonorge.no/kommuneinfo/v1/fylker",
-    "https://ws.geonorge.no/kommuneinfo/v1/fylker?format=geojson"
-  ];
-  let data=null;
-  for(const u of urls){
-    try{const r=await fetch(u); if(r.ok){const d=await r.json(); if(d.features){data=d;break}}}catch(e){}
-  }
-  if(!data) throw new Error("map");
-  features=data.features; draw();
+
+  const url=
+    "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson";
+
+  const response=await fetch(url);
+
+  if(!response.ok)
+    throw new Error("Kunne ikke hente kartet");
+
+  const data=await response.json();
+
+  if(!data.features || !data.features.length)
+    throw new Error("Ingen kartdata");
+
+  features=data.features;
+
+  draw();
 }
-function update(){timer.textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0")}
-function finish(text){running=false;clearInterval(timerId);input.disabled=true;status.textContent=text}
+
+function update(){
+
+  timer.textContent=
+    String(Math.floor(seconds/60)).padStart(2,"0")+
+    ":"+
+    String(seconds%60).padStart(2,"0");
+}
+
+function finish(text){
+
+  running=false;
+
+  clearInterval(timerId);
+
+  input.disabled=true;
+
+  status.textContent=text;
+}
+
 function start(){
-  clearInterval(timerId); found=new Set();seconds=120;running=true;input.disabled=false;
-  score.textContent="0";update();status.textContent="Skriv inn fylkene så raskt du kan.";
-  svg.querySelectorAll(".county").forEach(p=>p.classList.remove("found"));input.value="";input.focus();
-  timerId=setInterval(()=>{seconds--;update();if(seconds<=0)finish("⏰ Tiden er ute!")},1000);
+
+  clearInterval(timerId);
+
+  found=new Set();
+  seconds=120;
+  running=true;
+
+  input.disabled=false;
+
+  score.textContent="0";
+  update();
+
+  status.textContent=
+    "Skriv inn fylkene så raskt du kan.";
+
+  svg.querySelectorAll(".county")
+    .forEach(p=>p.classList.remove("found"));
+
+  input.value="";
+  input.focus();
+
+  timerId=setInterval(()=>{
+
+    seconds--;
+    update();
+
+    if(seconds<=0)
+      finish("⏰ Tiden er ute!");
+
+  },1000);
 }
-document.getElementById("form").addEventListener("submit",e=>{
-  e.preventDefault(); if(!running)return;
-  const key=norm(input.value); input.value=""; if(!key)return;
-  const name=aliases[key]||COUNTIES.find(x=>norm(x)===key);
-  if(!name){status.textContent="Ikke et fylkesnavn.";return}
-  if(found.has(name)){status.textContent="Allerede funnet.";return}
+
+document.getElementById("form")
+.addEventListener("submit",e=>{
+
+  e.preventDefault();
+
+  if(!running)return;
+
+  const key=norm(input.value);
+
+  input.value="";
+
+  if(!key)return;
+
+  const name=
+    aliases[key] ||
+    COUNTIES.find(x=>norm(x)===key);
+
+  if(!name){
+
+    status.textContent=
+      "Ikke et fylkesnavn.";
+
+    return;
+  }
+
+  if(found.has(name)){
+
+    status.textContent=
+      "Allerede funnet.";
+
+    return;
+  }
+
   found.add(name);
-  const p=[...svg.querySelectorAll(".county")].find(x=>norm(x.dataset.name)===norm(name));
-  if(p)p.classList.add("found");
-  score.textContent=found.size;status.textContent="✓ "+name;
-  if(found.size===15)finish("🎉 Alle 15 fylkene!");
+
+  const p=[
+    ...svg.querySelectorAll(".county")
+  ].find(x=>norm(x.dataset.name)===norm(name));
+
+  if(p)
+    p.classList.add("found");
+
+  score.textContent=found.size;
+
+  status.textContent="✓ "+name;
+
+  if(found.size===15)
+    finish("🎉 Alle 15 fylkene!");
 });
-document.getElementById("restart").addEventListener("click",start);
-loadMap().then(start).catch(()=>{status.textContent="Kartdata kunne ikke lastes. Sjekk at nettleseren tillater Kartverket-data.";start()});
+
+document.getElementById("restart")
+.addEventListener("click",start);
+
+loadMap()
+.then(start)
+.catch(error=>{
+
+  console.error(error);
+
+  status.textContent=
+    "Kartet kunne ikke lastes. Prøv å laste siden på nytt.";
+
+});
 </script>
-</body></html>
+
+</body>
+</html>
