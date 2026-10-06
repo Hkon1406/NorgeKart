@@ -150,11 +150,13 @@ function draw(){
 
   features.forEach(f=>{
 
-    const name=
+    const const name =
+      f.properties?.Fylkesnavn ||
       f.properties?.fylkesnavn ||
       f.properties?.fylkesnavn_norsk ||
       f.properties?.navn ||
-      f.properties?.name;
+      f.properties?.name ||
+      f.properties?.county_name;
 
     if(!name)return;
 
@@ -174,7 +176,7 @@ function draw(){
 async function loadMap(){
 
   const url=
-    "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson";
+    "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/master/Fylker-M.geojson";
 
   const response=await fetch(url);
 
