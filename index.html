@@ -102,7 +102,7 @@ button {
 @media (min-width: 700px) {
 
   #map {
-    height: 950px;
+    height: 900px;
     object-fit: contain;
     object-position: center top;
   }
@@ -112,12 +112,12 @@ button {
   }
 
   #foundMessage {
-    margin-bottom: -8px;
+    margin-bottom: -12px;
   }
 }
 
 
-/* Mobil */
+/* Mobil – beholdes som før */
 @media (max-width: 699px) {
 
   .map-container {
@@ -232,12 +232,24 @@ function drawMap(features) {
   features.forEach(f => scan(f.geometry.coordinates));
 
   const width = 700;
-  const height = 1050;
+
+  /*
+    PC får et lavere koordinatområde.
+    Mobil bruker det gamle 1050-området.
+  */
+  const isPC = window.innerWidth >= 700;
+  const height = isPC ? 850 : 1050;
+
   const padding = 20;
 
   const scale = Math.min(
     (width - padding * 2) / (maxX - minX),
     (height - padding * 2) / (maxY - minY)
+  );
+
+  svg.setAttribute(
+    "viewBox",
+    `0 0 ${width} ${height}`
   );
 
   function project(p) {
