@@ -150,7 +150,7 @@ function draw(){
 
   features.forEach(f=>{
 
-    const const name =
+     const name =
       f.properties?.Fylkesnavn ||
       f.properties?.fylkesnavn ||
       f.properties?.fylkesnavn_norsk ||
@@ -173,26 +173,19 @@ function draw(){
   });
 }
 
+
 async function loadMap(){
 
-  const url=
+  const url =
     "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson";
 
-  const response=await fetch(url);
-console.log("KARTSVAR:", response.status, response.ok);
-  if(!response.ok)
-    throw new Error("Kunne ikke hente kartet");
+  const response = await fetch(url);
+  const data = await response.json();
 
-  const data=await response.json();
-
-  if(!data.features || !data.features.length)
-    throw new Error("Ingen kartdata");
-
-  features=data.features;
+  features = data.features;
 
   draw();
 }
-
 function update(){
 
   timer.textContent=
