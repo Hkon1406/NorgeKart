@@ -30,14 +30,20 @@ h1 {
 
 .map-container {
   position: relative;
+  padding-top: 200px;
+  background: #222;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
+/* Timer og sjekk-boks */
 .map-controls {
-  position: absolute;
-  top: 200px;
-  left: 20px;
-  right: 20px;
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
   z-index: 2;
+  margin: 0 20px 12px 20px;
 }
 
 #foundMessage {
@@ -51,12 +57,13 @@ h1 {
   display: none;
 }
 
+/* Kartet */
 #map {
   width: 100%;
+  height: auto;
   display: block;
-  margin-top: 0;
+  margin: 0;
   background: #222;
-  border-radius: 12px;
 }
 
 .county {
@@ -97,33 +104,21 @@ button {
   color: #aaa;
 }
 
-/* PC */
-@media (min-width: 700px) {
-  .map-container {
-    margin-top: 0;
-  }
-
-  #map {
-    transform: translateY(-300px);
-  }
-
-  .map-controls {
-    top: 200px;
-  }
-}
-
 /* Mobil */
 @media (max-width: 699px) {
   .map-container {
-    margin-top: 0;
-  }
-
-  #map {
-    transform: none;
+    padding-top: 200px;
   }
 
   .map-controls {
-    top: 200px;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 12px;
+  }
+
+  #map {
+    width: 100%;
+    height: auto;
   }
 }
 </style>
