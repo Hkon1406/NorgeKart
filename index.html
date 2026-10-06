@@ -338,7 +338,14 @@ document.getElementById("form").addEventListener(
     found.add(county);
 
     const path = [...svg.querySelectorAll(".county")]
-      .find(p => normalize(p.dataset.name) === normalize(county));
+  .find(p => {
+    const mapName = normalize(p.dataset.name);
+    const answerName = normalize(county);
+
+    return mapName === answerName ||
+           mapName.includes(answerName) ||
+           answerName.includes(mapName);
+  });
 
     if (path) {
       path.classList.add("found");
