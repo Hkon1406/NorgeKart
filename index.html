@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fylkesblitz Norge</title>
-
 <style>
 body {
   margin: 0;
@@ -12,45 +11,37 @@ body {
   color: white;
   font-family: Arial, sans-serif;
 }
-
 main {
   max-width: 900px;
   margin: auto;
   padding: 20px;
 }
-
 h1 {
   margin-bottom: 5px;
 }
-
 #timer {
   font-size: 32px;
   font-weight: bold;
 }
-
 #map {
   width: 100%;
   margin-top: 15px;
   background: #222;
   border-radius: 12px;
 }
-
 .county {
   fill: #333;
   stroke: white;
   stroke-width: 1;
 }
-
 .county.found {
   fill: #20a050;
 }
-
 .controls {
   display: flex;
   gap: 8px;
   margin-top: 15px;
 }
-
 input {
   flex: 1;
   padding: 14px;
@@ -60,331 +51,228 @@ input {
   border: 1px solid #555;
   border-radius: 8px;
 }
-
 button {
   padding: 14px 20px;
   border: 0;
   border-radius: 8px;
   font-weight: bold;
 }
-
 #status {
   margin-top: 10px;
   color: #aaa;
 }
 </style>
 </head>
-
 <body>
-
 <main>
-
 <h1>🇳🇴 Fylkesblitz</h1>
-
 <div id="timer">02:00</div>
-
 <svg id="map" viewBox="0 0 700 1050"></svg>
-
 <form id="form" class="controls">
 <input id="answer" placeholder="Skriv et fylke..." autocomplete="off">
 <button>OK</button>
 </form>
-
 <div id="status">
 Skriv inn fylkene så raskt du kan.
 </div>
-
 <p>
 <b id="score">0</b> / 15 fylker
 </p>
-
 <button id="restart">Start på nytt</button>
-
 </main>
-
 <script>
-
 const COUNTIES = [
-"Agder",
-"Akershus",
-"Buskerud",
-"Finnmark",
-"Innlandet",
-"Møre og Romsdal",
-"Nordland",
-"Oslo",
-"Rogaland",
-"Telemark",
-"Troms",
-"Trøndelag",
-"Vestfold",
-"Vestland",
-"Østfold"
+  "Agder",
+  "Akershus",
+  "Buskerud",
+  "Finnmark",
+  "Innlandet",
+  "Møre og Romsdal",
+  "Nordland",
+  "Oslo",
+  "Rogaland",
+  "Telemark",
+  "Troms",
+  "Trøndelag",
+  "Vestfold",
+  "Vestland",
+  "Østfold"
 ];
-
 const svg = document.getElementById("map");
 const input = document.getElementById("answer");
 const score = document.getElementById("score");
 const timer = document.getElementById("timer");
 const status = document.getElementById("status");
-
 let found = new Set();
 let seconds = 120;
 let timerId;
-
 function normalize(text) {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim();
 }
-
 function drawMap(features) {
-
   svg.innerHTML = "";
-
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
-
   function scan(coords) {
-
     if (typeof coords[0] === "number") {
-
       minX = Math.min(minX, coords[0]);
       maxX = Math.max(maxX, coords[0]);
-
       minY = Math.min(minY, coords[1]);
       maxY = Math.max(maxY, coords[1]);
-
       return;
     }
-
     coords.forEach(scan);
   }
-
   features.forEach(f => scan(f.geometry.coordinates));
-
   const width = 700;
   const height = 1050;
   const padding = 20;
-
   const scale = Math.min(
     (width - padding * 2) / (maxX - minX),
     (height - padding * 2) / (maxY - minY)
   );
-
   function project(p) {
-
     return [
       (p[0] - minX) * scale + padding,
       height - ((p[1] - minY) * scale + padding)
     ];
-
   }
-
   function ring(points) {
-
-    return points.map((p,i) => {
-
+    return points.map((p, i) => {
       const q = project(p);
-
       return (i ? "L" : "M") +
         q[0].toFixed(2) + " " +
         q[1].toFixed(2);
-
     }).join(" ") + " Z";
-
   }
-
   features.forEach(f => {
-
     const g = f.geometry;
-
     let d = "";
-
     if (g.type === "Polygon") {
-
       d = g.coordinates.map(ring).join(" ");
-
     }
-
     if (g.type === "MultiPolygon") {
-
       d = g.coordinates
         .map(poly => poly.map(ring).join(" "))
         .join(" ");
-
     }
-
     const path = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "path"
     );
-
     path.setAttribute("d", d);
     path.classList.add("county");
-
-    const name =
-  f.properties?.Fylkesnavn ||
-  f.properties?.fylkesnavn ||
-  f.properties?.navn ||
-  f.properties?.name ||
-  f.properties?.NAME_1 ||
-  f.properties?.county ||
-  "";
-
-path.dataset.name = name;
-
-    path.dataset.name = name;
-
+    /*
+      Vi lagrer ALLE egenskapene til kartområdet.
+      Da trenger vi ikke vite hva feltet heter.
+    */
+    const propertiesText = normalize(
+      JSON.stringify(f.properties || {})
+    );
+    path.dataset.properties = propertiesText;
     svg.appendChild(path);
-
   });
-
 }
-
 async function loadMap() {
-
   const response = await fetch(
     "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson"
   );
-
+  if (!response.ok) {
+    throw new Error("Kartet kunne ikke lastes");
+  }
   const data = await response.json();
-console.log(data);
   drawMap(data.features);
-
 }
-
 function updateTimer() {
-
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-
   timer.textContent =
-    String(m).padStart(2,"0") +
+    String(m).padStart(2, "0") +
     ":" +
-    String(s).padStart(2,"0");
-
+    String(s).padStart(2, "0");
 }
-
 function startGame() {
-
   clearInterval(timerId);
-
   found = new Set();
   seconds = 120;
-
   score.textContent = "0";
   input.value = "";
-
   updateTimer();
-
   svg.querySelectorAll(".county")
     .forEach(p => p.classList.remove("found"));
-
   input.disabled = false;
-
+  status.textContent =
+    "Skriv inn fylkene så raskt du kan.";
   timerId = setInterval(() => {
-
     seconds--;
-
     updateTimer();
-
     if (seconds <= 0) {
-
       clearInterval(timerId);
-
       input.disabled = true;
-
-      status.textContent = "⏰ Tiden er ute!";
-
+      status.textContent =
+        "⏰ Tiden er ute!";
     }
-
-  },1000);
-
+  }, 1000);
   input.focus();
-
 }
-
 document.getElementById("form").addEventListener(
   "submit",
   function(e) {
-
     e.preventDefault();
-
     const answer = normalize(input.value);
-
     input.value = "";
-
     const county = COUNTIES.find(
       x => normalize(x) === answer
     );
-
     if (!county) {
-
-      status.textContent = "Ikke et fylkesnavn.";
-
+      status.textContent =
+        "Ikke et fylkesnavn.";
       return;
-
     }
-
     if (found.has(county)) {
-
-      status.textContent = "Allerede funnet.";
-
+      status.textContent =
+        "Allerede funnet.";
       return;
-
     }
-
-    found.add(county);
-
-    const path = [...svg.querySelectorAll(".county")]
-  .find(p => {
-    const mapName = normalize(p.dataset.name);
     const answerName = normalize(county);
-
-    return mapName === answerName ||
-           mapName.includes(answerName) ||
-           answerName.includes(mapName);
-  });
-
-    if (path) {
-      path.classList.add("found");
+    const path = [...svg.querySelectorAll(".county")]
+      .find(p => {
+        const properties =
+          p.dataset.properties || "";
+        return properties.includes(answerName);
+      });
+    if (!path) {
+      status.textContent =
+        "Fylket ble funnet, men kartområdet ble ikke funnet.";
+      return;
     }
-
+    found.add(county);
+    path.classList.add("found");
     score.textContent = found.size;
-
-    status.textContent = "✓ " + county;
-
+    status.textContent =
+      "✓ " + county;
     if (found.size === 15) {
-
       clearInterval(timerId);
-
       input.disabled = true;
-
-      status.textContent = "🎉 Alle 15 fylkene!";
-
+      status.textContent =
+        "🎉 Alle 15 fylkene!";
     }
-
   }
 );
-
 document.getElementById("restart")
   .addEventListener("click", startGame);
-
 loadMap()
   .then(startGame)
   .catch(() => {
-
     status.textContent =
       "Kartet kunne ikke lastes.";
-
   });
-
 </script>
-
 </body>
 </html>
