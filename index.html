@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fylkesblitz Norge</title>
+<title>Fylkene</title>
 
 <style>
 body {
@@ -97,10 +97,33 @@ button {
   color: #aaa;
 }
 
-/* Kun PC */
+/* PC */
 @media (min-width: 700px) {
+  .map-container {
+    margin-top: 0;
+  }
+
   #map {
-    margin-top: -140px;
+    transform: translateY(-180px);
+  }
+
+  .map-controls {
+    top: 200px;
+  }
+}
+
+/* Mobil */
+@media (max-width: 699px) {
+  .map-container {
+    margin-top: 0;
+  }
+
+  #map {
+    transform: none;
+  }
+
+  .map-controls {
+    top: 200px;
   }
 }
 </style>
@@ -129,11 +152,11 @@ button {
 </form>
 
 <div id="status">
-  Skriv inn fylkene så raskt du kan.
+Skriv inn fylkene så raskt du kan.
 </div>
 
 <p>
-  <b id="score">0</b> / 15 fylker
+<b id="score">0</b> / 15 fylker
 </p>
 
 <button id="restart">Start på nytt</button>
@@ -268,7 +291,6 @@ async function loadMap() {
   }
 
   const data = await response.json();
-
   drawMap(data.features);
 }
 
@@ -309,9 +331,7 @@ function startGame() {
     if (seconds <= 0) {
       clearInterval(timerId);
       input.disabled = true;
-
-      status.textContent =
-        "⏰ Tiden er ute!";
+      status.textContent = "⏰ Tiden er ute!";
     }
   }, 1000);
 
@@ -324,7 +344,6 @@ document.getElementById("form").addEventListener(
     e.preventDefault();
 
     const answer = normalize(input.value);
-
     input.value = "";
 
     const county = COUNTIES.find(
@@ -332,14 +351,12 @@ document.getElementById("form").addEventListener(
     );
 
     if (!county) {
-      status.textContent =
-        "Ikke et fylkesnavn.";
+      status.textContent = "Ikke et fylkesnavn.";
       return;
     }
 
     if (found.has(county)) {
-      status.textContent =
-        "Allerede funnet.";
+      status.textContent = "Allerede funnet.";
       return;
     }
 
@@ -360,43 +377,29 @@ document.getElementById("form").addEventListener(
     }
 
     found.add(county);
-
     path.classList.add("found");
 
-    foundMessage.textContent =
-      "✓ " + county;
+    foundMessage.textContent = "✓ " + county;
+    foundMessage.style.display = "block";
 
-    foundMessage.style.display =
-      "block";
-
-    score.textContent =
-      found.size;
-
-    status.textContent =
-      "✓ " + county;
+    score.textContent = found.size;
+    status.textContent = "✓ " + county;
 
     if (found.size === 15) {
       clearInterval(timerId);
-
       input.disabled = true;
-
-      status.textContent =
-        "🎉 Alle 15 fylkene!";
+      status.textContent = "🎉 Alle 15 fylkene!";
     }
   }
 );
 
 document.getElementById("restart")
-  .addEventListener(
-    "click",
-    startGame
-  );
+  .addEventListener("click", startGame);
 
 loadMap()
   .then(startGame)
   .catch(() => {
-    status.textContent =
-      "Kartet kunne ikke lastes.";
+    status.textContent = "Kartet kunne ikke lastes.";
   });
 </script>
 
