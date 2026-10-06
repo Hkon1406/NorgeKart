@@ -249,7 +249,7 @@ async function loadMap() {
   );
 
   const data = await response.json();
-
+console.log(data);
   drawMap(data.features);
 
 }
