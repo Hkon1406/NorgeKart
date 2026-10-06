@@ -23,6 +23,21 @@ h1 {
   font-size: 32px;
   font-weight: bold;
 }
+ .map-container {
+  position: relative;
+}
+
+.map-controls {
+  position: absolute;
+  top: 200px;
+  left: 20px;
+  right: 20px;
+  z-index: 2;
+}
+
+#foundMessage {
+  margin-top: 5px;
+} 
 #map {
   width: 100%;
   display: block;
@@ -77,9 +92,13 @@ button {
 <body>
 <main>
 <h1>🇳🇴 Fylkesblitz</h1>
-<div id="timer">02:00</div> 
- <div id="foundMessage"></div> 
-<svg id="map" viewBox="0 0 700 1050"></svg>
+<div class="map-container">
+  <div class="map-controls">
+    <div id="timer">02:00</div>
+    <div id="foundMessage"></div>
+  </div>
+  <svg id="map" viewBox="0 0 700 1050"></svg>
+</div>
 <form id="form" class="controls">
 <input id="answer" placeholder="Skriv et fylke..." autocomplete="off">
 <button>OK</button>
