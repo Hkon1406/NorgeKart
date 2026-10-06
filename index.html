@@ -98,16 +98,11 @@ button {
 }
 
 
-/* =========================
-   PC
-   ========================= */
-
+/* PC */
 @media (min-width: 700px) {
 
-  /* Kartet får mindre høyde på PC,
-     men hele kartet skaleres inn */
   #map {
-    height: 850px;
+    height: 950px;
     object-fit: contain;
     object-position: center top;
   }
@@ -115,13 +110,14 @@ button {
   .map-controls {
     top: 200px;
   }
+
+  #foundMessage {
+    margin-bottom: -8px;
+  }
 }
 
 
-/* =========================
-   MOBIL
-   ========================= */
-
+/* Mobil */
 @media (max-width: 699px) {
 
   .map-container {
