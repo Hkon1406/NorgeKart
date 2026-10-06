@@ -228,11 +228,15 @@ function drawMap(features) {
     path.classList.add("county");
 
     const name =
-      f.properties?.Fylkesnavn ||
-      f.properties?.fylkesnavn ||
-      f.properties?.navn ||
-      f.properties?.name ||
-      "";
+  f.properties?.Fylkesnavn ||
+  f.properties?.fylkesnavn ||
+  f.properties?.navn ||
+  f.properties?.name ||
+  f.properties?.NAME_1 ||
+  f.properties?.county ||
+  "";
+
+path.dataset.name = name;
 
     path.dataset.name = name;
 
