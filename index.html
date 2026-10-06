@@ -61,12 +61,23 @@ button {
   margin-top: 10px;
   color: #aaa;
 }
+#foundMessage {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #20a050;
+  color: white;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  display: none;
+}
 </style>
 </head>
 <body>
 <main>
 <h1>🇳🇴 Fylkesblitz</h1>
-<div id="timer">02:00</div>
+<div id="timer">02:00</div> 
+ <div id="foundMessage"></div> 
 <svg id="map" viewBox="0 0 700 1050"></svg>
 <form id="form" class="controls">
 <input id="answer" placeholder="Skriv et fylke..." autocomplete="off">
@@ -103,6 +114,7 @@ const input = document.getElementById("answer");
 const score = document.getElementById("score");
 const timer = document.getElementById("timer");
 const status = document.getElementById("status");
+  const foundMessage = document.getElementById("foundMessage");
 let found = new Set();
 let seconds = 120;
 let timerId;
@@ -203,6 +215,7 @@ function startGame() {
   seconds = 120;
   score.textContent = "0";
   input.value = "";
+  foundMessage.style.display = "none";
   updateTimer();
   svg.querySelectorAll(".county")
     .forEach(p => p.classList.remove("found"));
@@ -254,6 +267,8 @@ document.getElementById("form").addEventListener(
     }
     found.add(county);
     path.classList.add("found");
+    foundMessage.textContent = "✓ " + county;
+foundMessage.style.display = "block";
     score.textContent = found.size;
     status.textContent =
       "✓ " + county;
