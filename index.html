@@ -106,7 +106,7 @@ button {
 
 @media (min-width: 700px) {
   #map {
-    height: 900px;
+    height: 800px;
     object-fit: contain;
     object-position: center top;
   }
@@ -229,9 +229,10 @@ function drawMap(features) {
   features.forEach(f => scan(f.geometry.coordinates));
 
   const width = 700;
-  const padding = 14;
-  const yOffset = 46;
-  const height = 600;
+  const isPC = window.innerWidth >= 700;
+  const height = isPC ? 700 : 900;
+  const padding = 18;
+
   const scale = Math.min(
     (width - padding * 2) / (maxX - minX),
     (height - padding * 2) / (maxY - minY)
@@ -242,7 +243,7 @@ function drawMap(features) {
   function project(p) {
     return [
       (p[0] - minX) * scale + padding,
-      height - ((p[1] - minY) * scale + padding) - yOffset
+      height - ((p[1] - minY) * scale + padding)
     ];
   }
 
