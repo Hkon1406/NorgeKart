@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fylkene</title>
+
 <style>
 :root {
   --bg-1: #07131f;
@@ -18,22 +19,28 @@
   --success-dark: #0a8d5b;
   --shadow: rgba(4, 10, 18, 0.7);
 }
-* { box-sizing: border-box; }
 
-html, body {
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
   margin: 0;
   height: 100%;
 }
 
-html {
-  zoom: 0.6;
-}
-
 body {
   min-height: 100vh;
+  width: 125%;
+  min-height: 125vh;
+  transform: scale(0.8);
+  transform-origin: top left;
+
   background:
     radial-gradient(circle at top, rgba(76, 180, 255, 0.18), transparent 28%),
     linear-gradient(180deg, var(--bg-1), var(--bg-2));
+
   color: var(--text);
   font-family: Arial, sans-serif;
 }
@@ -43,11 +50,13 @@ main {
   margin: 0 auto;
   padding: 18px 18px 24px;
 }
+
 h1 {
   margin: 0 0 10px 0;
   font-size: 26px;
   letter-spacing: 0.04em;
 }
+
 .map-container {
   position: relative;
   border-radius: 18px;
@@ -56,6 +65,7 @@ h1 {
   background: rgba(10, 17, 24, 0.9);
   box-shadow: 0 18px 36px var(--shadow);
 }
+
 .map-controls {
   position: absolute;
   top: 12px;
@@ -67,22 +77,32 @@ h1 {
   gap: 8px;
   pointer-events: none;
 }
+
 #timer {
   width: fit-content;
   padding: 8px 16px;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(113,214,255,0.24), rgba(69,151,255,0.18));
+  background: linear-gradient(
+    135deg,
+    rgba(113,214,255,0.24),
+    rgba(69,151,255,0.18)
+  );
   font-size: 30px;
   font-weight: 700;
   letter-spacing: 0.06em;
   box-shadow: 0 10px 22px rgba(28, 107, 158, 0.25);
 }
+
 #foundMessage {
   width: fit-content;
   margin: 0;
   padding: 7px 12px;
-  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  background: linear-gradient(
+    135deg,
+    var(--success),
+    var(--success-dark)
+  );
   color: white;
   border-radius: 10px;
   font-size: 16px;
@@ -90,27 +110,38 @@ h1 {
   display: none;
   box-shadow: 0 10px 20px rgba(20, 117, 74, 0.3);
 }
+
 #map {
   width: 100%;
   display: block;
   margin: 0;
-  background: linear-gradient(180deg, rgba(17, 25, 33, 0.95), rgba(11, 19, 27, 0.9));
+  background: linear-gradient(
+    180deg,
+    rgba(17, 25, 33, 0.95),
+    rgba(11, 19, 27, 0.9)
+  );
 }
+
 .county {
   fill: #2d4051;
   stroke: rgba(255,255,255,0.85);
   stroke-width: 1;
   transition: fill 0.2s ease, transform 0.2s ease;
 }
+
 .county.found {
   fill: #2ec27d;
-  filter: drop-shadow(0 0 10px rgba(46, 194, 125, 0.6));
+  filter: drop-shadow(
+    0 0 10px rgba(46, 194, 125, 0.6)
+  );
 }
+
 .controls {
   display: flex;
   gap: 10px;
   margin: 14px 0 0 0;
 }
+
 input {
   flex: 1;
   padding: 14px 16px;
@@ -119,37 +150,49 @@ input {
   color: var(--text);
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 12px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.04);
 }
+
 input:focus {
   outline: 2px solid rgba(113, 214, 255, 0.45);
   border-color: rgba(113, 214, 255, 0.7);
 }
+
 button {
   padding: 14px 18px;
   border: 0;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary-2)
+  );
   color: #061418;
   font-weight: 800;
-  box-shadow: 0 12px 20px rgba(69, 151, 255, 0.25);
+  box-shadow:
+    0 12px 20px rgba(69, 151, 255, 0.25);
   cursor: pointer;
 }
+
 button:hover {
   filter: brightness(1.06);
 }
+
 #status {
   margin: 10px 0 0 0;
   color: var(--muted);
   font-size: 14px;
   min-height: 20px;
 }
+
 #score {
   margin: 12px 0 0 0;
   display: block;
   font-size: 16px;
   color: var(--text);
 }
+
 #restart {
   margin: 12px 0 0 0;
   background: rgba(255,255,255,0.06);
@@ -157,36 +200,55 @@ button:hover {
   border: 1px solid rgba(255,255,255,0.12);
   box-shadow: none;
 }
+
+/* MENY */
+
 #menu {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 125vw;
+  height: 125vh;
+
   background: rgba(4, 9, 14, 0.98);
   backdrop-filter: blur(8px);
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   z-index: 100;
   overflow: hidden;
 }
+
 #menu.hidden {
   display: none;
 }
+
 .menu-panel {
   width: min(560px, calc(100vw - 30px));
   padding: 26px 20px 20px;
+
   border-radius: 26px;
-  background: linear-gradient(180deg, rgba(10,17,24,0.98), rgba(15,22,29,0.98));
+
+  background: linear-gradient(
+    180deg,
+    rgba(10,17,24,0.98),
+    rgba(15,22,29,0.98)
+  );
+
   border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 26px 55px rgba(0, 0, 0, 0.5);
+
+  box-shadow:
+    0 26px 55px rgba(0, 0, 0, 0.5);
 }
+
 .menu-title {
   margin: 0 0 18px 0;
   text-align: center;
   font-size: 28px;
   letter-spacing: 0.04em;
 }
+
 .section-title {
   margin: 18px 0 8px;
   font-size: 12px;
@@ -194,11 +256,13 @@ button:hover {
   text-transform: uppercase;
   color: var(--muted);
 }
+
 .mode-list,
 .difficulty-list {
   display: grid;
   gap: 12px;
 }
+
 .mode-btn,
 .difficulty-btn,
 #start-game,
@@ -206,24 +270,39 @@ button:hover {
   width: 100%;
   text-align: left;
   border-radius: 16px;
+
   background: rgba(255,255,255,0.04);
   color: var(--text);
+
   border: 1px solid rgba(255,255,255,0.08);
+
   box-shadow: none;
+
   font-size: 18px;
   font-weight: 700;
+
   padding: 18px 16px;
 }
+
 .mode-btn.active,
 .difficulty-btn.active {
-  background: linear-gradient(135deg, rgba(113,214,255,0.18), rgba(69,151,255,0.18));
+  background: linear-gradient(
+    135deg,
+    rgba(113,214,255,0.18),
+    rgba(69,151,255,0.18)
+  );
+
   border-color: rgba(113,214,255,0.55);
-  box-shadow: 0 12px 24px rgba(69, 151, 255, 0.15);
+
+  box-shadow:
+    0 12px 24px rgba(69, 151, 255, 0.15);
 }
+
 .mode-btn.coming-soon {
   opacity: 0.65;
   cursor: not-allowed;
 }
+
 .mode-btn .small,
 .difficulty-btn .small {
   display: block;
@@ -232,20 +311,32 @@ button:hover {
   font-weight: 500;
   margin-top: 4px;
 }
+
 #start-game {
   margin-top: 18px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary-2)
+  );
+
   color: #061418;
   text-align: center;
+
   border: 0;
-  box-shadow: 0 12px 24px rgba(69, 151, 255, 0.2);
+
+  box-shadow:
+    0 12px 24px rgba(69, 151, 255, 0.2);
 }
+
 #menu-back {
   margin-top: 12px;
   text-align: center;
   background: rgba(255,255,255,0.02);
   border-color: rgba(255,255,255,0.1);
 }
+
 #menu-note {
   margin-top: 18px;
   text-align: center;
@@ -254,56 +345,78 @@ button:hover {
 }
 
 /* RESULTATSBOKS */
+
 #resultOverlay {
   position: fixed;
   inset: 0;
+
+  width: 125vw;
+  height: 125vh;
+
   z-index: 200;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   padding: 20px;
+
   background: rgba(4, 9, 14, 0.72);
   backdrop-filter: blur(6px);
 }
+
 #resultOverlay.hidden {
   display: none;
 }
+
 .result-panel {
   width: min(420px, 100%);
   padding: 30px 24px 24px;
+
   text-align: center;
+
   border-radius: 24px;
+
   background: linear-gradient(
     180deg,
     rgba(15, 25, 34, 0.99),
     rgba(9, 17, 24, 0.99)
   );
+
   border: 1px solid rgba(113, 214, 255, 0.25);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.6);
 }
+
 .result-emoji {
   font-size: 52px;
 }
+
 .result-panel h2 {
   margin: 8px 0;
   font-size: 30px;
 }
+
 .result-score {
   font-size: 32px;
   font-weight: 800;
   color: var(--success);
   margin: 12px 0;
 }
+
 .result-panel p {
   margin: 0 0 22px;
   color: var(--muted);
   font-size: 17px;
 }
+
 #result-restart,
 #result-menu {
   width: 100%;
   margin-top: 10px;
 }
+
 #result-menu {
   background: rgba(255,255,255,0.07);
   color: var(--text);
@@ -312,27 +425,34 @@ button:hover {
 }
 
 @media (min-width: 700px) {
+
   #map {
     height: 900px;
     object-fit: contain;
     object-position: center top;
   }
+
 }
 
 @media (max-width: 699px) {
+
   main {
     padding: 12px 12px 20px;
   }
+
   #map {
     height: auto;
     width: 100%;
   }
+
   .controls {
     flex-direction: column;
   }
+
   button {
     width: 100%;
   }
+
 }
 </style>
 </head>
@@ -340,62 +460,129 @@ button:hover {
 <body>
 
 <!-- MENY -->
+
 <div id="menu">
+
   <div class="menu-panel">
-    <h2 class="menu-title">Velg spillmodus</h2>
+
+    <h2 class="menu-title">
+      Velg spillmodus
+    </h2>
 
     <div class="mode-list">
-      <button type="button" class="mode-btn active" data-mode="fylker">
+
+      <button
+        type="button"
+        class="mode-btn active"
+        data-mode="fylker"
+      >
         Fylker
-        <span class="small">Nåværende spill</span>
+        <span class="small">
+          Nåværende spill
+        </span>
       </button>
 
-      <button type="button" class="mode-btn coming-soon" data-mode="kommuner">
+      <button
+        type="button"
+        class="mode-btn coming-soon"
+        data-mode="kommuner"
+      >
         Alle kommuner
-        <span class="small">Kommer snart</span>
+        <span class="small">
+          Kommer snart
+        </span>
       </button>
 
-      <button type="button" class="mode-btn coming-soon" data-mode="kommuner-fylke">
+      <button
+        type="button"
+        class="mode-btn coming-soon"
+        data-mode="kommuner-fylke"
+      >
         Kommuner i et fylke
-        <span class="small">Kommer snart</span>
+        <span class="small">
+          Kommer snart
+        </span>
       </button>
+
     </div>
 
-    <div class="section-title">Vanskelighetsgrad</div>
+    <div class="section-title">
+      Vanskelighetsgrad
+    </div>
 
     <div class="difficulty-list">
-      <button type="button" class="difficulty-btn" data-difficulty="lett">
+
+      <button
+        type="button"
+        class="difficulty-btn"
+        data-difficulty="lett"
+      >
         Lett
-        <span class="small">3 minutter</span>
+        <span class="small">
+          3 minutter
+        </span>
       </button>
 
-      <button type="button" class="difficulty-btn active" data-difficulty="normal">
+      <button
+        type="button"
+        class="difficulty-btn active"
+        data-difficulty="normal"
+      >
         Normal
-        <span class="small">2 minutter</span>
+        <span class="small">
+          2 minutter
+        </span>
       </button>
 
-      <button type="button" class="difficulty-btn" data-difficulty="hard">
+      <button
+        type="button"
+        class="difficulty-btn"
+        data-difficulty="hard"
+      >
         Hard
-        <span class="small">1 minutt</span>
+        <span class="small">
+          1 minutt
+        </span>
       </button>
+
     </div>
 
-    <button id="start-game" type="button">Start</button>
+    <button
+      id="start-game"
+      type="button"
+    >
+      Start
+    </button>
 
     <div id="menu-note">
       For nå er bare Fylker-spillet tilgjengelig.
     </div>
+
   </div>
+
 </div>
 
 <!-- RESULTATSBOKS -->
+
 <div id="resultOverlay" class="hidden">
+
   <div class="result-panel">
-    <div class="result-emoji" id="resultEmoji">🎉</div>
 
-    <h2 id="resultTitle">Gratulerer!</h2>
+    <div
+      class="result-emoji"
+      id="resultEmoji"
+    >
+      🎉
+    </div>
 
-    <div class="result-score" id="resultScore">
+    <h2 id="resultTitle">
+      Gratulerer!
+    </h2>
+
+    <div
+      class="result-score"
+      id="resultScore"
+    >
       15 / 15
     </div>
 
@@ -403,14 +590,22 @@ button:hover {
       Du fant alle fylkene! 😉
     </p>
 
-    <button id="result-restart" type="button">
+    <button
+      id="result-restart"
+      type="button"
+    >
       Start på nytt
     </button>
 
-    <button id="result-menu" type="button">
+    <button
+      id="result-menu"
+      type="button"
+    >
       Tilbake til meny
     </button>
+
   </div>
+
 </div>
 
 <main>
@@ -429,11 +624,17 @@ button:hover {
 
   </div>
 
-  <svg id="map" viewBox="0 0 700 1050"></svg>
+  <svg
+    id="map"
+    viewBox="0 0 700 1050"
+  ></svg>
 
 </div>
 
-<form id="form" class="controls">
+<form
+  id="form"
+  class="controls"
+>
 
   <input
     id="answer"
@@ -455,11 +656,17 @@ button:hover {
   <b>0</b> / 15 fylker
 </p>
 
-<button id="restart" type="button">
+<button
+  id="restart"
+  type="button"
+>
   Start på nytt
 </button>
 
-<button id="menu-back" type="button">
+<button
+  id="menu-back"
+  type="button"
+>
   Tilbake til meny
 </button>
 
@@ -486,43 +693,119 @@ const COUNTIES = [
 ];
 
 const DIFFICULTY_SETTINGS = {
-  lett: { seconds: 180, label: "Lett" },
-  normal: { seconds: 120, label: "Normal" },
-  hard: { seconds: 60, label: "Hard" }
+  lett: {
+    seconds: 180,
+    label: "Lett"
+  },
+  normal: {
+    seconds: 120,
+    label: "Normal"
+  },
+  hard: {
+    seconds: 60,
+    label: "Hard"
+  }
 };
 
-const svg = document.getElementById("map");
-const input = document.getElementById("answer");
-const score = document.getElementById("score");
-const timer = document.getElementById("timer");
-const status = document.getElementById("status");
-const foundMessage = document.getElementById("foundMessage");
-const menu = document.getElementById("menu");
-const modeButtons = document.querySelectorAll(".mode-btn");
-const difficultyButtons = document.querySelectorAll(".difficulty-btn");
-const startGameButton = document.getElementById("start-game");
-const menuBackButton = document.getElementById("menu-back");
-const resultOverlay = document.getElementById("resultOverlay");
-const resultEmoji = document.getElementById("resultEmoji");
-const resultTitle = document.getElementById("resultTitle");
-const resultScore = document.getElementById("resultScore");
-const resultText = document.getElementById("resultText");
-const resultRestartButton = document.getElementById("result-restart");
-const resultMenuButton = document.getElementById("result-menu");
+const svg =
+  document.getElementById("map");
+
+const input =
+  document.getElementById("answer");
+
+const score =
+  document.getElementById("score");
+
+const timer =
+  document.getElementById("timer");
+
+const status =
+  document.getElementById("status");
+
+const foundMessage =
+  document.getElementById("foundMessage");
+
+const menu =
+  document.getElementById("menu");
+
+const modeButtons =
+  document.querySelectorAll(".mode-btn");
+
+const difficultyButtons =
+  document.querySelectorAll(
+    ".difficulty-btn"
+  );
+
+const startGameButton =
+  document.getElementById(
+    "start-game"
+  );
+
+const menuBackButton =
+  document.getElementById(
+    "menu-back"
+  );
+
+const resultOverlay =
+  document.getElementById(
+    "resultOverlay"
+  );
+
+const resultEmoji =
+  document.getElementById(
+    "resultEmoji"
+  );
+
+const resultTitle =
+  document.getElementById(
+    "resultTitle"
+  );
+
+const resultScore =
+  document.getElementById(
+    "resultScore"
+  );
+
+const resultText =
+  document.getElementById(
+    "resultText"
+  );
+
+const resultRestartButton =
+  document.getElementById(
+    "result-restart"
+  );
+
+const resultMenuButton =
+  document.getElementById(
+    "result-menu"
+  );
 
 let found = new Set();
-let seconds = DIFFICULTY_SETTINGS.normal.seconds;
+
+let seconds =
+  DIFFICULTY_SETTINGS.normal.seconds;
+
 let timerId;
+
 let gameStarted = false;
+
 let selectedMode = "fylker";
-let selectedDifficulty = "normal";
+
+let selectedDifficulty =
+  "normal";
 
 function normalize(text) {
+
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
     .trim();
+
 }
 
 function drawMap(features) {
@@ -536,31 +819,67 @@ function drawMap(features) {
 
   function scan(coords) {
 
-    if (typeof coords[0] === "number") {
+    if (
+      typeof coords[0] ===
+      "number"
+    ) {
 
-      minX = Math.min(minX, coords[0]);
-      maxX = Math.max(maxX, coords[0]);
+      minX =
+        Math.min(
+          minX,
+          coords[0]
+        );
 
-      minY = Math.min(minY, coords[1]);
-      maxY = Math.max(maxY, coords[1]);
+      maxX =
+        Math.max(
+          maxX,
+          coords[0]
+        );
+
+      minY =
+        Math.min(
+          minY,
+          coords[1]
+        );
+
+      maxY =
+        Math.max(
+          maxY,
+          coords[1]
+        );
 
       return;
+
     }
 
     coords.forEach(scan);
+
   }
 
-  features.forEach(f => scan(f.geometry.coordinates));
+  features.forEach(f =>
+    scan(
+      f.geometry.coordinates
+    )
+  );
 
   const width = 700;
-  const isPC = window.innerWidth >= 700;
-  const height = isPC ? 700 : 900;
+
+  const isPC =
+    window.innerWidth >= 700;
+
+  const height =
+    isPC ? 700 : 900;
+
   const padding = 18;
 
-  const scale = Math.min(
-    (width - padding * 2) / (maxX - minX),
-    (height - padding * 2) / (maxY - minY)
-  );
+  const scale =
+    Math.min(
+      (width - padding * 2) /
+        (maxX - minX),
+
+      (height - padding * 2) /
+        (maxY - minY)
+    );
 
   svg.setAttribute(
     "viewBox",
@@ -570,45 +889,75 @@ function drawMap(features) {
   function project(p) {
 
     return [
-      (p[0] - minX) * scale + padding,
-      height - ((p[1] - minY) * scale + padding)
+
+      (p[0] - minX) *
+        scale +
+        padding,
+
+      height -
+        (
+          (p[1] - minY) *
+            scale +
+          padding
+        )
+
     ];
 
   }
 
   function ring(points) {
 
-    return points.map((p, i) => {
+    return points
+      .map((p, i) => {
 
-      const q = project(p);
+        const q =
+          project(p);
 
-      return (i ? "L" : "M") +
-        q[0].toFixed(2) +
-        " " +
-        q[1].toFixed(2);
+        return (
+          i ? "L" : "M"
+        ) +
+          q[0].toFixed(2) +
+          " " +
+          q[1].toFixed(2);
 
-    }).join(" ") + " Z";
+      })
+      .join(" ") +
+      " Z";
 
   }
 
   features.forEach(f => {
 
-    const g = f.geometry;
+    const g =
+      f.geometry;
+
     let d = "";
 
-    if (g.type === "Polygon") {
+    if (
+      g.type ===
+      "Polygon"
+    ) {
 
-      d = g.coordinates
-        .map(ring)
-        .join(" ");
+      d =
+        g.coordinates
+          .map(ring)
+          .join(" ");
 
     }
 
-    if (g.type === "MultiPolygon") {
+    if (
+      g.type ===
+      "MultiPolygon"
+    ) {
 
-      d = g.coordinates
-        .map(poly => poly.map(ring).join(" "))
-        .join(" ");
+      d =
+        g.coordinates
+          .map(poly =>
+            poly
+              .map(ring)
+              .join(" ")
+          )
+          .join(" ");
 
     }
 
@@ -618,13 +967,20 @@ function drawMap(features) {
         "path"
       );
 
-    path.setAttribute("d", d);
+    path.setAttribute(
+      "d",
+      d
+    );
 
-    path.classList.add("county");
+    path.classList.add(
+      "county"
+    );
 
     const propertiesText =
       normalize(
-        JSON.stringify(f.properties || {})
+        JSON.stringify(
+          f.properties || {}
+        )
       );
 
     path.dataset.properties =
@@ -638,46 +994,67 @@ function drawMap(features) {
 
 async function loadMap() {
 
-  const response = await fetch(
-    "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson"
-  );
+  const response =
+    await fetch(
+      "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson"
+    );
 
   if (!response.ok) {
-    throw new Error("Kartet kunne ikke lastes");
+
+    throw new Error(
+      "Kartet kunne ikke lastes"
+    );
+
   }
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
-  drawMap(data.features);
+  drawMap(
+    data.features
+  );
 
 }
 
 function updateTimer() {
 
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
+  const m =
+    Math.floor(
+      seconds / 60
+    );
+
+  const s =
+    seconds % 60;
 
   timer.textContent =
-    String(m).padStart(2, "0") +
+    String(m).padStart(
+      2,
+      "0"
+    ) +
     ":" +
-    String(s).padStart(2, "0");
+    String(s).padStart(
+      2,
+      "0"
+    );
 
 }
 
-/* RESULTATSBOKS */
+function showResultScreen(
+  type,
+  count
+) {
 
-function showResultScreen(type, count) {
-
-  resultOverlay.classList.remove("hidden");
+  resultOverlay.classList.remove(
+    "hidden"
+  );
 
   resultScore.textContent =
     count + " / 15";
 
   if (type === "win") {
 
-    /* 15/15 ER HELT UENDRET */
-
-    resultEmoji.textContent = "🎉";
+    resultEmoji.textContent =
+      "🎉";
 
     resultTitle.textContent =
       "Gratulerer!";
@@ -689,7 +1066,8 @@ function showResultScreen(type, count) {
 
   if (type === "almost") {
 
-    resultEmoji.textContent = "🔥";
+    resultEmoji.textContent =
+      "🔥";
 
     resultTitle.textContent =
       "Bra jobbet!";
@@ -701,7 +1079,8 @@ function showResultScreen(type, count) {
 
   if (type === "far") {
 
-    resultEmoji.textContent = "😅";
+    resultEmoji.textContent =
+      "😅";
 
     resultTitle.textContent =
       "Godt forsøk!";
@@ -715,7 +1094,9 @@ function showResultScreen(type, count) {
 
 function hideResultScreen() {
 
-  resultOverlay.classList.add("hidden");
+  resultOverlay.classList.add(
+    "hidden"
+  );
 
 }
 
@@ -723,7 +1104,9 @@ function showMenu() {
 
   hideResultScreen();
 
-  menu.classList.remove("hidden");
+  menu.classList.remove(
+    "hidden"
+  );
 
   input.disabled = true;
 
@@ -739,13 +1122,17 @@ function showMenu() {
 
 function hideMenu() {
 
-  menu.classList.add("hidden");
+  menu.classList.add(
+    "hidden"
+  );
 
 }
 
 function resetGame() {
 
-  clearInterval(timerId);
+  clearInterval(
+    timerId
+  );
 
   hideResultScreen();
 
@@ -758,8 +1145,9 @@ function resetGame() {
       selectedDifficulty
     ].seconds;
 
-  score.querySelector("b").textContent =
-    "0";
+  score.querySelector(
+    "b"
+  ).textContent = "0";
 
   input.value = "";
 
@@ -768,9 +1156,14 @@ function resetGame() {
 
   updateTimer();
 
-  svg.querySelectorAll(".county")
+  svg
+    .querySelectorAll(
+      ".county"
+    )
     .forEach(p =>
-      p.classList.remove("found")
+      p.classList.remove(
+        "found"
+      )
     );
 
   input.disabled = false;
@@ -783,10 +1176,14 @@ function resetGame() {
 }
 
 function startGame(
-  { preserveInput = false } = {}
+  {
+    preserveInput = false
+  } = {}
 ) {
 
-  clearInterval(timerId);
+  clearInterval(
+    timerId
+  );
 
   hideResultScreen();
 
@@ -799,11 +1196,14 @@ function startGame(
       selectedDifficulty
     ].seconds;
 
-  score.querySelector("b").textContent =
-    "0";
+  score.querySelector(
+    "b"
+  ).textContent = "0";
 
   if (!preserveInput) {
+
     input.value = "";
+
   }
 
   foundMessage.style.display =
@@ -811,9 +1211,14 @@ function startGame(
 
   updateTimer();
 
-  svg.querySelectorAll(".county")
+  svg
+    .querySelectorAll(
+      ".county"
+    )
     .forEach(p =>
-      p.classList.remove("found")
+      p.classList.remove(
+        "found"
+      )
     );
 
   input.disabled = false;
@@ -821,42 +1226,49 @@ function startGame(
   status.textContent =
     "Skriv inn fylkene så raskt du kan.";
 
-  timerId = setInterval(() => {
+  timerId =
+    setInterval(() => {
 
-    seconds--;
+      seconds--;
 
-    updateTimer();
+      updateTimer();
 
-    if (seconds <= 0) {
+      if (
+        seconds <= 0
+      ) {
 
-      clearInterval(timerId);
-
-      input.disabled = true;
-
-      gameStarted = false;
-
-      status.textContent =
-        "⏰ Tiden er ute!";
-
-      if (found.size >= 8) {
-
-        showResultScreen(
-          "almost",
-          found.size
+        clearInterval(
+          timerId
         );
 
-      } else {
+        input.disabled = true;
 
-        showResultScreen(
-          "far",
-          found.size
-        );
+        gameStarted = false;
+
+        status.textContent =
+          "⏰ Tiden er ute!";
+
+        if (
+          found.size >= 8
+        ) {
+
+          showResultScreen(
+            "almost",
+            found.size
+          );
+
+        } else {
+
+          showResultScreen(
+            "far",
+            found.size
+          );
+
+        }
 
       }
 
-    }
-
-  }, 1000);
+    }, 1000);
 
   input.focus();
 
@@ -864,7 +1276,9 @@ function startGame(
 
 function goToMenu() {
 
-  clearInterval(timerId);
+  clearInterval(
+    timerId
+  );
 
   hideResultScreen();
 
@@ -877,15 +1291,21 @@ function goToMenu() {
 
   updateTimer();
 
-  svg.querySelectorAll(".county")
+  svg
+    .querySelectorAll(
+      ".county"
+    )
     .forEach(p =>
-      p.classList.remove("found")
+      p.classList.remove(
+        "found"
+      )
     );
 
   found = new Set();
 
-  score.querySelector("b").textContent =
-    "0";
+  score.querySelector(
+    "b"
+  ).textContent = "0";
 
   input.value = "";
 
@@ -897,91 +1317,100 @@ function goToMenu() {
   status.textContent =
     "Velg en spillmodus for å starte.";
 
-  menu.classList.remove("hidden");
+  menu.classList.remove(
+    "hidden"
+  );
 
 }
 
-/* SPILLMODUS */
+modeButtons.forEach(
+  button => {
 
-modeButtons.forEach(button => {
+    button.addEventListener(
+      "click",
+      () => {
 
-  button.addEventListener(
-    "click",
-    () => {
+        const chosenMode =
+          button.dataset.mode;
 
-      const chosenMode =
-        button.dataset.mode;
+        if (
+          chosenMode !==
+          "fylker"
+        ) {
 
-      if (chosenMode !== "fylker") {
+          status.textContent =
+            "Denne spillmodusen kommer senere.";
 
-        status.textContent =
-          "Denne spillmodusen kommer senere.";
+          return;
 
-        return;
-      }
+        }
 
-      selectedMode =
-        chosenMode;
+        selectedMode =
+          chosenMode;
 
-      modeButtons.forEach(btn => {
+        modeButtons.forEach(
+          btn => {
 
-        btn.classList.toggle(
-          "active",
-          btn.dataset.mode === chosenMode
+            btn.classList.toggle(
+              "active",
+              btn.dataset.mode ===
+                chosenMode
+            );
+
+          }
         );
 
-      });
+      }
+    );
 
-    }
-  );
+  }
+);
 
-});
+difficultyButtons.forEach(
+  button => {
 
-/* VANSKELIGHET */
+    button.addEventListener(
+      "click",
+      () => {
 
-difficultyButtons.forEach(button => {
+        selectedDifficulty =
+          button.dataset.difficulty;
 
-  button.addEventListener(
-    "click",
-    () => {
+        difficultyButtons.forEach(
+          btn => {
 
-      selectedDifficulty =
-        button.dataset.difficulty;
+            btn.classList.toggle(
+              "active",
+              btn.dataset.difficulty ===
+                selectedDifficulty
+            );
 
-      difficultyButtons.forEach(btn => {
+          }
+        );
 
-        btn.classList.toggle(
-          "active",
-          btn.dataset.difficulty ===
+        seconds =
+          DIFFICULTY_SETTINGS[
             selectedDifficulty
-        );
+          ].seconds;
 
-      });
+        updateTimer();
 
-      seconds =
-        DIFFICULTY_SETTINGS[
-          selectedDifficulty
-        ].seconds;
+        if (!gameStarted) {
 
-      updateTimer();
+          status.textContent =
+            `Vanskelighetsgrad: ${
+              DIFFICULTY_SETTINGS[
+                selectedDifficulty
+              ].label
+            }`;
 
-      if (!gameStarted) {
-
-        status.textContent =
-          `Vanskelighetsgrad: ${
-            DIFFICULTY_SETTINGS[
-              selectedDifficulty
-            ].label
-          }`;
+        }
 
       }
+    );
 
-    }
-  );
-
-});
-
-/* START */
+  }
+);
 
 startGameButton.addEventListener(
   "click",
@@ -994,14 +1423,10 @@ startGameButton.addEventListener(
   }
 );
 
-/* MENY */
-
 menuBackButton.addEventListener(
   "click",
   goToMenu
 );
-
-/* RESULTAT: START PÅ NYTT */
 
 resultRestartButton.addEventListener(
   "click",
@@ -1014,8 +1439,6 @@ resultRestartButton.addEventListener(
   }
 );
 
-/* RESULTAT: TILBAKE TIL MENY */
-
 resultMenuButton.addEventListener(
   "click",
   () => {
@@ -1026,8 +1449,6 @@ resultMenuButton.addEventListener(
 
   }
 );
-
-/* SVAR */
 
 document
   .getElementById("form")
@@ -1052,14 +1473,17 @@ document
       }
 
       const answer =
-        normalize(input.value);
+        normalize(
+          input.value
+        );
 
       input.value = "";
 
       const county =
         COUNTIES.find(
           x =>
-            normalize(x) === answer
+            normalize(x) ===
+            answer
         );
 
       if (!county) {
@@ -1071,7 +1495,9 @@ document
 
       }
 
-      if (found.has(county)) {
+      if (
+        found.has(county)
+      ) {
 
         status.textContent =
           "Allerede funnet.";
@@ -1084,17 +1510,21 @@ document
         normalize(county);
 
       const path =
-        [...svg.querySelectorAll(".county")]
-          .find(p => {
+        [
+          ...svg.querySelectorAll(
+            ".county"
+          )
+        ].find(p => {
 
-            const properties =
-              p.dataset.properties || "";
+          const properties =
+            p.dataset.properties ||
+            "";
 
-            return properties.includes(
-              answerName
-            );
+          return properties.includes(
+            answerName
+          );
 
-          });
+        });
 
       if (!path) {
 
@@ -1105,9 +1535,13 @@ document
 
       }
 
-      found.add(county);
+      found.add(
+        county
+      );
 
-      path.classList.add("found");
+      path.classList.add(
+        "found"
+      );
 
       foundMessage.textContent =
         "✓ " + county;
@@ -1115,17 +1549,21 @@ document
       foundMessage.style.display =
         "block";
 
-      score.querySelector("b").textContent =
+      score.querySelector(
+        "b"
+      ).textContent =
         found.size;
 
       status.textContent =
         "✓ " + county;
 
-      /* 15/15 */
+      if (
+        found.size === 15
+      ) {
 
-      if (found.size === 15) {
-
-        clearInterval(timerId);
+        clearInterval(
+          timerId
+        );
 
         input.disabled = true;
 
@@ -1144,26 +1582,25 @@ document
     }
   );
 
-/* START PÅ NYTT */
-
 document
-  .getElementById("restart")
+  .getElementById(
+    "restart"
+  )
   .addEventListener(
     "click",
     resetGame
   );
 
-/* LAST KART */
+loadMap().catch(
+  () => {
 
-loadMap().catch(() => {
+    status.textContent =
+      "Kartet kunne ikke lastes.";
 
-  status.textContent =
-    "Kartet kunne ikke lastes.";
-
-});
+  }
+);
 
 showMenu();
-
 updateTimer();
 
 </script>
