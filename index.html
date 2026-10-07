@@ -11,18 +11,16 @@ body {
   background: #111;
   color: white;
   font-family: Arial, sans-serif;
-  min-height: 100vh;
 }
 
 main {
   max-width: 900px;
   margin: auto;
-  padding: 12px 20px 10px;
+  padding: 20px;
 }
 
 h1 {
-  margin-bottom: 6px;
-  font-size: clamp(2rem, 2vw, 2.4rem);
+  margin-bottom: 5px;
 }
 
 #timer {
@@ -66,7 +64,6 @@ h1 {
   margin-top: 0;
   background: #222;
   border-radius: 12px;
-  height: 580px;
 }
 
 .county {
@@ -82,7 +79,7 @@ h1 {
 .controls {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 15px;
 }
 
 input {
@@ -103,13 +100,13 @@ button {
 }
 
 #status {
-  margin-top: 8px;
+  margin-top: 10px;
   color: #aaa;
 }
 
 @media (min-width: 700px) {
   #map {
-    height: 620px;
+    height: 900px;
     object-fit: contain;
     object-position: center top;
   }
@@ -380,9 +377,11 @@ document.getElementById("form").addEventListener("submit", function(e) {
 
 document.getElementById("restart").addEventListener("click", startGame);
 
-loadMap().then(startGame).catch(() => {
+loadMap().catch(() => {
   status.textContent = "Kartet kunne ikke lastes.";
 });
+
+updateTimer();
 </script>
 
 </body>
