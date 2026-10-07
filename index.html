@@ -197,6 +197,7 @@ const foundMessage = document.getElementById("foundMessage");
 let found = new Set();
 let seconds = 120;
 let timerId;
+let gameStarted = false;
 
 function normalize(text) {
   return text
@@ -303,6 +304,7 @@ function startGame() {
   clearInterval(timerId);
 
   found = new Set();
+  gameStarted = true;
   seconds = 120;
 
   score.textContent = "0";
@@ -323,6 +325,7 @@ function startGame() {
       clearInterval(timerId);
       input.disabled = true;
       status.textContent = "⏰ Tiden er ute!";
+      gameStarted = false;
     }
   }, 1000);
 
@@ -331,6 +334,10 @@ function startGame() {
 
 document.getElementById("form").addEventListener("submit", function(e) {
   e.preventDefault();
+
+  if (!gameStarted) {
+    startGame();
+  }
 
   const answer = normalize(input.value);
   input.value = "";
@@ -371,6 +378,7 @@ document.getElementById("form").addEventListener("submit", function(e) {
   if (found.size === 15) {
     clearInterval(timerId);
     input.disabled = true;
+    gameStarted = false;
     status.textContent = "🎉 Alle 15 fylkene!";
   }
 });
