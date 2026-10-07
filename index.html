@@ -42,7 +42,7 @@ h1 {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   margin: 0;
   padding: 0;
 }
@@ -104,10 +104,7 @@ button {
   color: #aaa;
 }
 
-
-/* PC */
 @media (min-width: 700px) {
-
   #map {
     height: 900px;
     object-fit: contain;
@@ -119,10 +116,7 @@ button {
   }
 }
 
-
-/* Mobil – beholdes som før */
 @media (max-width: 699px) {
-
   .map-container {
     margin-top: 0;
   }
@@ -136,7 +130,6 @@ button {
   .map-controls {
     top: 0;
   }
-   
 }
 </style>
 </head>
@@ -236,14 +229,8 @@ function drawMap(features) {
   features.forEach(f => scan(f.geometry.coordinates));
 
   const width = 700;
-
-  /*
-    PC får et lavere koordinatområde.
-    Mobil bruker det gamle 1050-området.
-  */
   const isPC = window.innerWidth >= 700;
   const height = isPC ? 850 : 1050;
-
   const padding = 20;
 
   const scale = Math.min(
@@ -251,10 +238,7 @@ function drawMap(features) {
     (height - padding * 2) / (maxY - minY)
   );
 
-  svg.setAttribute(
-    "viewBox",
-    `0 0 ${width} ${height}`
-  );
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
   function project(p) {
     return [
@@ -266,10 +250,7 @@ function drawMap(features) {
   function ring(points) {
     return points.map((p, i) => {
       const q = project(p);
-
-      return (i ? "L" : "M") +
-        q[0].toFixed(2) + " " +
-        q[1].toFixed(2);
+      return (i ? "L" : "M") + q[0].toFixed(2) + " " + q[1].toFixed(2);
     }).join(" ") + " Z";
   }
 
@@ -287,18 +268,11 @@ function drawMap(features) {
         .join(" ");
     }
 
-    const path = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "path"
-    );
-
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", d);
     path.classList.add("county");
 
-    const propertiesText = normalize(
-      JSON.stringify(f.properties || {})
-    );
-
+    const propertiesText = normalize(JSON.stringify(f.properties || {}));
     path.dataset.properties = propertiesText;
 
     svg.appendChild(path);
@@ -322,10 +296,7 @@ function updateTimer() {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
 
-  timer.textContent =
-    String(m).padStart(2, "0") +
-    ":" +
-    String(s).padStart(2, "0");
+  timer.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
 }
 
 function startGame() {
@@ -340,13 +311,9 @@ function startGame() {
 
   updateTimer();
 
-  svg.querySelectorAll(".county")
-    .forEach(p => p.classList.remove("found"));
-
+  svg.querySelectorAll(".county").forEach(p => p.classList.remove("found"));
   input.disabled = false;
-
-  status.textContent =
-    "Skriv inn fylkene så raskt du kan.";
+  status.textContent = "Skriv inn fylkene så raskt du kan.";
 
   timerId = setInterval(() => {
     seconds--;
@@ -362,69 +329,57 @@ function startGame() {
   input.focus();
 }
 
-document.getElementById("form").addEventListener(
-  "submit",
-  function(e) {
-    e.preventDefault();
+document.getElementById("form").addEventListener("submit", function(e) {
+  e.preventDefault();
 
-    const answer = normalize(input.value);
-    input.value = "";
+  const answer = normalize(input.value);
+  input.value = "";
 
-    const county = COUNTIES.find(
-      x => normalize(x) === answer
-    );
+  const county = COUNTIES.find(x => normalize(x) === answer);
 
-    if (!county) {
-      status.textContent = "Ikke et fylkesnavn.";
-      return;
-    }
-
-    if (found.has(county)) {
-      status.textContent = "Allerede funnet.";
-      return;
-    }
-
-    const answerName = normalize(county);
-
-    const path = [...svg.querySelectorAll(".county")]
-      .find(p => {
-        const properties =
-          p.dataset.properties || "";
-
-        return properties.includes(answerName);
-      });
-
-    if (!path) {
-      status.textContent =
-        "Fylket ble funnet, men kartområdet ble ikke funnet.";
-      return;
-    }
-
-    found.add(county);
-    path.classList.add("found");
-
-    foundMessage.textContent = "✓ " + county;
-    foundMessage.style.display = "block";
-
-    score.textContent = found.size;
-    status.textContent = "✓ " + county;
-
-    if (found.size === 15) {
-      clearInterval(timerId);
-      input.disabled = true;
-      status.textContent = "🎉 Alle 15 fylkene!";
-    }
+  if (!county) {
+    status.textContent = "Ikke et fylkesnavn.";
+    return;
   }
-);
 
-document.getElementById("restart")
-  .addEventListener("click", startGame);
+  if (found.has(county)) {
+    status.textContent = "Allerede funnet.";
+    return;
+  }
 
-loadMap()
-  .then(startGame)
-  .catch(() => {
-    status.textContent = "Kartet kunne ikke lastes.";
+  const answerName = normalize(county);
+
+  const path = [...svg.querySelectorAll(".county")].find(p => {
+    const properties = p.dataset.properties || "";
+    return properties.includes(answerName);
   });
+
+  if (!path) {
+    status.textContent = "Fylket ble funnet, men kartområdet ble ikke funnet.";
+    return;
+  }
+
+  found.add(county);
+  path.classList.add("found");
+
+  foundMessage.textContent = "✓ " + county;
+  foundMessage.style.display = "block";
+
+  score.textContent = found.size;
+  status.textContent = "✓ " + county;
+
+  if (found.size === 15) {
+    clearInterval(timerId);
+    input.disabled = true;
+    status.textContent = "🎉 Alle 15 fylkene!";
+  }
+});
+
+document.getElementById("restart").addEventListener("click", startGame);
+
+loadMap().then(startGame).catch(() => {
+  status.textContent = "Kartet kunne ikke lastes.";
+});
 </script>
 
 </body>
