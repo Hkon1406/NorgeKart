@@ -175,12 +175,15 @@ button:hover {
 #menu {
   position: fixed;
   inset: 0;
-  background: rgba(4, 9, 14, 0.88);
-  backdrop-filter: blur(7px);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 9, 14, 0.98);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  overflow: hidden;
 }
 
 #menu.hidden {
