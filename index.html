@@ -222,7 +222,8 @@ button:hover {
 
 .mode-btn,
 .difficulty-btn,
-#start-game {
+#start-game,
+#menu-back {
   width: 100%;
   text-align: left;
   border-radius: 16px;
@@ -263,6 +264,13 @@ button:hover {
   text-align: center;
   border: 0;
   box-shadow: 0 12px 24px rgba(69, 151, 255, 0.2);
+}
+
+#menu-back {
+  margin-top: 12px;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.1);
 }
 
 #menu-note {
@@ -378,6 +386,7 @@ Skriv inn fylkene så raskt du kan.
 </p>
 
 <button id="restart" type="button">Start på nytt</button>
+<button id="menu-back" type="button">Tilbake til meny</button>
 
 </main>
 
@@ -416,6 +425,7 @@ const menu = document.getElementById("menu");
 const modeButtons = document.querySelectorAll(".mode-btn");
 const difficultyButtons = document.querySelectorAll(".difficulty-btn");
 const startGameButton = document.getElementById("start-game");
+const menuBackButton = document.getElementById("menu-back");
 
 let found = new Set();
 let seconds = DIFFICULTY_SETTINGS.normal.seconds;
@@ -590,6 +600,22 @@ function startGame({ preserveInput = false } = {}) {
   input.focus();
 }
 
+function goToMenu() {
+  clearInterval(timerId);
+  gameStarted = false;
+  seconds = DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
+  updateTimer();
+
+  svg.querySelectorAll(".county").forEach(p => p.classList.remove("found"));
+  found = new Set();
+  score.querySelector("b").textContent = "0";
+  input.value = "";
+  input.disabled = true;
+  foundMessage.style.display = "none";
+  status.textContent = "Velg en spillmodus for å starte.";
+  menu.classList.remove("hidden");
+}
+
 modeButtons.forEach(button => {
   button.addEventListener("click", () => {
     const chosenMode = button.dataset.mode;
@@ -626,6 +652,8 @@ startGameButton.addEventListener("click", () => {
   hideMenu();
   startGame();
 });
+
+menuBackButton.addEventListener("click", goToMenu);
 
 document.getElementById("form").addEventListener("submit", function(e) {
   e.preventDefault();
