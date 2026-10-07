@@ -32,9 +32,10 @@ body {
 
 body {
   min-height: 100vh;
-  width: 125%;
-  min-height: 125vh;
-  transform: scale(0.8);
+  width: 166.6667%;
+  min-height: 166.6667vh;
+
+  transform: scale(0.6);
   transform-origin: top left;
 
   background:
@@ -206,8 +207,9 @@ button:hover {
 #menu {
   position: fixed;
   inset: 0;
-  width: 125vw;
-  height: 125vh;
+
+  width: 166.6667vw;
+  height: 166.6667vh;
 
   background: rgba(4, 9, 14, 0.98);
   backdrop-filter: blur(8px);
@@ -350,8 +352,8 @@ button:hover {
   position: fixed;
   inset: 0;
 
-  width: 125vw;
-  height: 125vh;
+  width: 166.6667vw;
+  height: 166.6667vh;
 
   z-index: 200;
 
@@ -425,17 +427,14 @@ button:hover {
 }
 
 @media (min-width: 700px) {
-
   #map {
     height: 900px;
     object-fit: contain;
     object-position: center top;
   }
-
 }
 
 @media (max-width: 699px) {
-
   main {
     padding: 12px 12px 20px;
   }
@@ -452,7 +451,6 @@ button:hover {
   button {
     width: 100%;
   }
-
 }
 </style>
 </head>
@@ -462,7 +460,6 @@ button:hover {
 <!-- MENY -->
 
 <div id="menu">
-
   <div class="menu-panel">
 
     <h2 class="menu-title">
@@ -547,10 +544,7 @@ button:hover {
 
     </div>
 
-    <button
-      id="start-game"
-      type="button"
-    >
+    <button id="start-game" type="button">
       Start
     </button>
 
@@ -559,7 +553,6 @@ button:hover {
     </div>
 
   </div>
-
 </div>
 
 <!-- RESULTATSBOKS -->
@@ -732,54 +725,34 @@ const modeButtons =
   document.querySelectorAll(".mode-btn");
 
 const difficultyButtons =
-  document.querySelectorAll(
-    ".difficulty-btn"
-  );
+  document.querySelectorAll(".difficulty-btn");
 
 const startGameButton =
-  document.getElementById(
-    "start-game"
-  );
+  document.getElementById("start-game");
 
 const menuBackButton =
-  document.getElementById(
-    "menu-back"
-  );
+  document.getElementById("menu-back");
 
 const resultOverlay =
-  document.getElementById(
-    "resultOverlay"
-  );
+  document.getElementById("resultOverlay");
 
 const resultEmoji =
-  document.getElementById(
-    "resultEmoji"
-  );
+  document.getElementById("resultEmoji");
 
 const resultTitle =
-  document.getElementById(
-    "resultTitle"
-  );
+  document.getElementById("resultTitle");
 
 const resultScore =
-  document.getElementById(
-    "resultScore"
-  );
+  document.getElementById("resultScore");
 
 const resultText =
-  document.getElementById(
-    "resultText"
-  );
+  document.getElementById("resultText");
 
 const resultRestartButton =
-  document.getElementById(
-    "result-restart"
-  );
+  document.getElementById("result-restart");
 
 const resultMenuButton =
-  document.getElementById(
-    "result-menu"
-  );
+  document.getElementById("result-menu");
 
 let found = new Set();
 
@@ -792,11 +765,9 @@ let gameStarted = false;
 
 let selectedMode = "fylker";
 
-let selectedDifficulty =
-  "normal";
+let selectedDifficulty = "normal";
 
 function normalize(text) {
-
   return text
     .toLowerCase()
     .normalize("NFD")
@@ -805,7 +776,6 @@ function normalize(text) {
       ""
     )
     .trim();
-
 }
 
 function drawMap(features) {
@@ -820,46 +790,37 @@ function drawMap(features) {
   function scan(coords) {
 
     if (
-      typeof coords[0] ===
-      "number"
+      typeof coords[0] === "number"
     ) {
 
-      minX =
-        Math.min(
-          minX,
-          coords[0]
-        );
+      minX = Math.min(
+        minX,
+        coords[0]
+      );
 
-      maxX =
-        Math.max(
-          maxX,
-          coords[0]
-        );
+      maxX = Math.max(
+        maxX,
+        coords[0]
+      );
 
-      minY =
-        Math.min(
-          minY,
-          coords[1]
-        );
+      minY = Math.min(
+        minY,
+        coords[1]
+      );
 
-      maxY =
-        Math.max(
-          maxY,
-          coords[1]
-        );
+      maxY = Math.max(
+        maxY,
+        coords[1]
+      );
 
       return;
-
     }
 
     coords.forEach(scan);
-
   }
 
   features.forEach(f =>
-    scan(
-      f.geometry.coordinates
-    )
+    scan(f.geometry.coordinates)
   );
 
   const width = 700;
@@ -872,14 +833,13 @@ function drawMap(features) {
 
   const padding = 18;
 
-  const scale =
-    Math.min(
-      (width - padding * 2) /
-        (maxX - minX),
+  const scale = Math.min(
+    (width - padding * 2) /
+      (maxX - minX),
 
-      (height - padding * 2) /
-        (maxY - minY)
-    );
+    (height - padding * 2) /
+      (maxY - minY)
+  );
 
   svg.setAttribute(
     "viewBox",
@@ -889,7 +849,6 @@ function drawMap(features) {
   function project(p) {
 
     return [
-
       (p[0] - minX) *
         scale +
         padding,
@@ -900,9 +859,7 @@ function drawMap(features) {
             scale +
           padding
         )
-
     ];
-
   }
 
   function ring(points) {
@@ -910,8 +867,7 @@ function drawMap(features) {
     return points
       .map((p, i) => {
 
-        const q =
-          project(p);
+        const q = project(p);
 
         return (
           i ? "L" : "M"
@@ -921,43 +877,30 @@ function drawMap(features) {
           q[1].toFixed(2);
 
       })
-      .join(" ") +
-      " Z";
-
+      .join(" ") + " Z";
   }
 
   features.forEach(f => {
 
-    const g =
-      f.geometry;
+    const g = f.geometry;
 
     let d = "";
 
-    if (
-      g.type ===
-      "Polygon"
-    ) {
+    if (g.type === "Polygon") {
 
-      d =
-        g.coordinates
-          .map(ring)
-          .join(" ");
+      d = g.coordinates
+        .map(ring)
+        .join(" ");
 
     }
 
-    if (
-      g.type ===
-      "MultiPolygon"
-    ) {
+    if (g.type === "MultiPolygon") {
 
-      d =
-        g.coordinates
-          .map(poly =>
-            poly
-              .map(ring)
-              .join(" ")
-          )
-          .join(" ");
+      d = g.coordinates
+        .map(poly =>
+          poly.map(ring).join(" ")
+        )
+        .join(" ");
 
     }
 
@@ -989,7 +932,6 @@ function drawMap(features) {
     svg.appendChild(path);
 
   });
-
 }
 
 async function loadMap() {
@@ -1000,43 +942,29 @@ async function loadMap() {
     );
 
   if (!response.ok) {
-
     throw new Error(
       "Kartet kunne ikke lastes"
     );
-
   }
 
   const data =
     await response.json();
 
-  drawMap(
-    data.features
-  );
-
+  drawMap(data.features);
 }
 
 function updateTimer() {
 
   const m =
-    Math.floor(
-      seconds / 60
-    );
+    Math.floor(seconds / 60);
 
   const s =
     seconds % 60;
 
   timer.textContent =
-    String(m).padStart(
-      2,
-      "0"
-    ) +
+    String(m).padStart(2, "0") +
     ":" +
-    String(s).padStart(
-      2,
-      "0"
-    );
-
+    String(s).padStart(2, "0");
 }
 
 function showResultScreen(
@@ -1053,43 +981,36 @@ function showResultScreen(
 
   if (type === "win") {
 
-    resultEmoji.textContent =
-      "🎉";
+    resultEmoji.textContent = "🎉";
 
     resultTitle.textContent =
       "Gratulerer!";
 
     resultText.textContent =
       "Du fant alle fylkene! 😉";
-
   }
 
   if (type === "almost") {
 
-    resultEmoji.textContent =
-      "🔥";
+    resultEmoji.textContent = "🔥";
 
     resultTitle.textContent =
       "Bra jobbet!";
 
     resultText.textContent =
       "Nesten 😉";
-
   }
 
   if (type === "far") {
 
-    resultEmoji.textContent =
-      "😅";
+    resultEmoji.textContent = "😅";
 
     resultTitle.textContent =
       "Godt forsøk!";
 
     resultText.textContent =
       "Langt i fra 😉";
-
   }
-
 }
 
 function hideResultScreen() {
@@ -1097,7 +1018,6 @@ function hideResultScreen() {
   resultOverlay.classList.add(
     "hidden"
   );
-
 }
 
 function showMenu() {
@@ -1117,7 +1037,6 @@ function showMenu() {
 
   status.textContent =
     "Velg en spillmodus for å starte.";
-
 }
 
 function hideMenu() {
@@ -1125,14 +1044,11 @@ function hideMenu() {
   menu.classList.add(
     "hidden"
   );
-
 }
 
 function resetGame() {
 
-  clearInterval(
-    timerId
-  );
+  clearInterval(timerId);
 
   hideResultScreen();
 
@@ -1156,15 +1072,13 @@ function resetGame() {
 
   updateTimer();
 
-  svg
-    .querySelectorAll(
-      ".county"
+  svg.querySelectorAll(
+    ".county"
+  ).forEach(p =>
+    p.classList.remove(
+      "found"
     )
-    .forEach(p =>
-      p.classList.remove(
-        "found"
-      )
-    );
+  );
 
   input.disabled = false;
 
@@ -1172,18 +1086,13 @@ function resetGame() {
     "Skriv inn fylkene så raskt du kan.";
 
   input.focus();
-
 }
 
 function startGame(
-  {
-    preserveInput = false
-  } = {}
+  { preserveInput = false } = {}
 ) {
 
-  clearInterval(
-    timerId
-  );
+  clearInterval(timerId);
 
   hideResultScreen();
 
@@ -1201,9 +1110,7 @@ function startGame(
   ).textContent = "0";
 
   if (!preserveInput) {
-
     input.value = "";
-
   }
 
   foundMessage.style.display =
@@ -1211,74 +1118,60 @@ function startGame(
 
   updateTimer();
 
-  svg
-    .querySelectorAll(
-      ".county"
+  svg.querySelectorAll(
+    ".county"
+  ).forEach(p =>
+    p.classList.remove(
+      "found"
     )
-    .forEach(p =>
-      p.classList.remove(
-        "found"
-      )
-    );
+  );
 
   input.disabled = false;
 
   status.textContent =
     "Skriv inn fylkene så raskt du kan.";
 
-  timerId =
-    setInterval(() => {
+  timerId = setInterval(() => {
 
-      seconds--;
+    seconds--;
 
-      updateTimer();
+    updateTimer();
 
-      if (
-        seconds <= 0
-      ) {
+    if (seconds <= 0) {
 
-        clearInterval(
-          timerId
+      clearInterval(timerId);
+
+      input.disabled = true;
+
+      gameStarted = false;
+
+      status.textContent =
+        "⏰ Tiden er ute!";
+
+      if (found.size >= 8) {
+
+        showResultScreen(
+          "almost",
+          found.size
         );
 
-        input.disabled = true;
+      } else {
 
-        gameStarted = false;
-
-        status.textContent =
-          "⏰ Tiden er ute!";
-
-        if (
-          found.size >= 8
-        ) {
-
-          showResultScreen(
-            "almost",
-            found.size
-          );
-
-        } else {
-
-          showResultScreen(
-            "far",
-            found.size
-          );
-
-        }
-
+        showResultScreen(
+          "far",
+          found.size
+        );
       }
+    }
 
-    }, 1000);
+  }, 1000);
 
   input.focus();
-
 }
 
 function goToMenu() {
 
-  clearInterval(
-    timerId
-  );
+  clearInterval(timerId);
 
   hideResultScreen();
 
@@ -1291,15 +1184,13 @@ function goToMenu() {
 
   updateTimer();
 
-  svg
-    .querySelectorAll(
-      ".county"
+  svg.querySelectorAll(
+    ".county"
+  ).forEach(p =>
+    p.classList.remove(
+      "found"
     )
-    .forEach(p =>
-      p.classList.remove(
-        "found"
-      )
-    );
+  );
 
   found = new Set();
 
@@ -1320,97 +1211,85 @@ function goToMenu() {
   menu.classList.remove(
     "hidden"
   );
-
 }
 
-modeButtons.forEach(
-  button => {
+modeButtons.forEach(button => {
 
-    button.addEventListener(
-      "click",
-      () => {
+  button.addEventListener(
+    "click",
+    () => {
 
-        const chosenMode =
-          button.dataset.mode;
+      const chosenMode =
+        button.dataset.mode;
 
-        if (
-          chosenMode !==
-          "fylker"
-        ) {
+      if (
+        chosenMode !== "fylker"
+      ) {
 
-          status.textContent =
-            "Denne spillmodusen kommer senere.";
+        status.textContent =
+          "Denne spillmodusen kommer senere.";
 
-          return;
-
-        }
-
-        selectedMode =
-          chosenMode;
-
-        modeButtons.forEach(
-          btn => {
-
-            btn.classList.toggle(
-              "active",
-              btn.dataset.mode ===
-                chosenMode
-            );
-
-          }
-        );
-
+        return;
       }
-    );
 
-  }
-);
+      selectedMode =
+        chosenMode;
 
-difficultyButtons.forEach(
-  button => {
+      modeButtons.forEach(btn => {
 
-    button.addEventListener(
-      "click",
-      () => {
-
-        selectedDifficulty =
-          button.dataset.difficulty;
-
-        difficultyButtons.forEach(
-          btn => {
-
-            btn.classList.toggle(
-              "active",
-              btn.dataset.difficulty ===
-                selectedDifficulty
-            );
-
-          }
+        btn.classList.toggle(
+          "active",
+          btn.dataset.mode ===
+            chosenMode
         );
 
-        seconds =
-          DIFFICULTY_SETTINGS[
+      });
+
+    }
+  );
+
+});
+
+difficultyButtons.forEach(button => {
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      selectedDifficulty =
+        button.dataset.difficulty;
+
+      difficultyButtons.forEach(btn => {
+
+        btn.classList.toggle(
+          "active",
+          btn.dataset.difficulty ===
             selectedDifficulty
-          ].seconds;
+        );
 
-        updateTimer();
+      });
 
-        if (!gameStarted) {
+      seconds =
+        DIFFICULTY_SETTINGS[
+          selectedDifficulty
+        ].seconds;
 
-          status.textContent =
-            `Vanskelighetsgrad: ${
-              DIFFICULTY_SETTINGS[
-                selectedDifficulty
-              ].label
-            }`;
+      updateTimer();
 
-        }
+      if (!gameStarted) {
 
+        status.textContent =
+          `Vanskelighetsgrad: ${
+            DIFFICULTY_SETTINGS[
+              selectedDifficulty
+            ].label
+          }`;
       }
-    );
 
-  }
-);
+    }
+  );
+
+});
 
 startGameButton.addEventListener(
   "click",
@@ -1469,13 +1348,10 @@ document
 
         input.value =
           firstAnswer;
-
       }
 
       const answer =
-        normalize(
-          input.value
-        );
+        normalize(input.value);
 
       input.value = "";
 
@@ -1492,18 +1368,14 @@ document
           "Ikke et fylkesnavn.";
 
         return;
-
       }
 
-      if (
-        found.has(county)
-      ) {
+      if (found.has(county)) {
 
         status.textContent =
           "Allerede funnet.";
 
         return;
-
       }
 
       const answerName =
@@ -1517,13 +1389,11 @@ document
         ].find(p => {
 
           const properties =
-            p.dataset.properties ||
-            "";
+            p.dataset.properties || "";
 
           return properties.includes(
             answerName
           );
-
         });
 
       if (!path) {
@@ -1532,16 +1402,11 @@ document
           "Fylket ble funnet, men kartområdet ble ikke funnet.";
 
         return;
-
       }
 
-      found.add(
-        county
-      );
+      found.add(county);
 
-      path.classList.add(
-        "found"
-      );
+      path.classList.add("found");
 
       foundMessage.textContent =
         "✓ " + county;
@@ -1557,13 +1422,9 @@ document
       status.textContent =
         "✓ " + county;
 
-      if (
-        found.size === 15
-      ) {
+      if (found.size === 15) {
 
-        clearInterval(
-          timerId
-        );
+        clearInterval(timerId);
 
         input.disabled = true;
 
@@ -1576,29 +1437,24 @@ document
           "win",
           15
         );
-
       }
 
     }
   );
 
 document
-  .getElementById(
-    "restart"
-  )
+  .getElementById("restart")
   .addEventListener(
     "click",
     resetGame
   );
 
-loadMap().catch(
-  () => {
+loadMap().catch(() => {
 
-    status.textContent =
-      "Kartet kunne ikke lastes.";
+  status.textContent =
+    "Kartet kunne ikke lastes.";
 
-  }
-);
+});
 
 showMenu();
 updateTimer();
