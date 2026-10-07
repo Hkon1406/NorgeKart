@@ -19,19 +19,25 @@
   --shadow: rgba(4, 10, 18, 0.7);
 }
 * { box-sizing: border-box; }
+
 html, body {
   margin: 0;
   height: 100%;
 }
+
+html {
+  zoom: 0.6;
+}
+
 body {
   min-height: 100vh;
-  zoom: 0.6;
   background:
     radial-gradient(circle at top, rgba(76, 180, 255, 0.18), transparent 28%),
     linear-gradient(180deg, var(--bg-1), var(--bg-2));
   color: var(--text);
   font-family: Arial, sans-serif;
 }
+
 main {
   max-width: 920px;
   margin: 0 auto;
@@ -246,6 +252,7 @@ button:hover {
   color: var(--muted);
   font-size: 13px;
 }
+
 /* RESULTATSBOKS */
 #resultOverlay {
   position: fixed;
@@ -303,6 +310,7 @@ button:hover {
   border: 1px solid rgba(255,255,255,0.12);
   box-shadow: none;
 }
+
 @media (min-width: 700px) {
   #map {
     height: 900px;
@@ -310,6 +318,7 @@ button:hover {
     object-position: center top;
   }
 }
+
 @media (max-width: 699px) {
   main {
     padding: 12px 12px 20px;
@@ -327,100 +336,137 @@ button:hover {
 }
 </style>
 </head>
+
 <body>
+
 <!-- MENY -->
 <div id="menu">
   <div class="menu-panel">
     <h2 class="menu-title">Velg spillmodus</h2>
+
     <div class="mode-list">
       <button type="button" class="mode-btn active" data-mode="fylker">
         Fylker
         <span class="small">Nåværende spill</span>
       </button>
+
       <button type="button" class="mode-btn coming-soon" data-mode="kommuner">
         Alle kommuner
         <span class="small">Kommer snart</span>
       </button>
+
       <button type="button" class="mode-btn coming-soon" data-mode="kommuner-fylke">
         Kommuner i et fylke
         <span class="small">Kommer snart</span>
       </button>
     </div>
+
     <div class="section-title">Vanskelighetsgrad</div>
+
     <div class="difficulty-list">
       <button type="button" class="difficulty-btn" data-difficulty="lett">
         Lett
         <span class="small">3 minutter</span>
       </button>
+
       <button type="button" class="difficulty-btn active" data-difficulty="normal">
         Normal
         <span class="small">2 minutter</span>
       </button>
+
       <button type="button" class="difficulty-btn" data-difficulty="hard">
         Hard
         <span class="small">1 minutt</span>
       </button>
     </div>
+
     <button id="start-game" type="button">Start</button>
+
     <div id="menu-note">
       For nå er bare Fylker-spillet tilgjengelig.
     </div>
   </div>
 </div>
+
 <!-- RESULTATSBOKS -->
 <div id="resultOverlay" class="hidden">
   <div class="result-panel">
     <div class="result-emoji" id="resultEmoji">🎉</div>
+
     <h2 id="resultTitle">Gratulerer!</h2>
+
     <div class="result-score" id="resultScore">
       15 / 15
     </div>
+
     <p id="resultText">
       Du fant alle fylkene! 😉
     </p>
+
     <button id="result-restart" type="button">
       Start på nytt
     </button>
+
     <button id="result-menu" type="button">
       Tilbake til meny
     </button>
   </div>
 </div>
+
 <main>
+
 <h1>🇳🇴 Fylkene</h1>
+
 <div class="map-container">
+
   <div class="map-controls">
+
     <div id="timer">
       02:00
     </div>
+
     <div id="foundMessage"></div>
+
   </div>
+
   <svg id="map" viewBox="0 0 700 1050"></svg>
+
 </div>
+
 <form id="form" class="controls">
+
   <input
     id="answer"
     placeholder="Skriv et fylke..."
     autocomplete="off"
   >
+
   <button type="submit">
     OK
   </button>
+
 </form>
+
 <div id="status">
   Skriv inn fylkene så raskt du kan.
 </div>
+
 <p id="score">
   <b>0</b> / 15 fylker
 </p>
+
 <button id="restart" type="button">
   Start på nytt
 </button>
+
 <button id="menu-back" type="button">
   Tilbake til meny
 </button>
+
 </main>
+
 <script>
+
 const COUNTIES = [
   "Agder",
   "Akershus",
@@ -438,11 +484,13 @@ const COUNTIES = [
   "Vestland",
   "Østfold"
 ];
+
 const DIFFICULTY_SETTINGS = {
   lett: { seconds: 180, label: "Lett" },
   normal: { seconds: 120, label: "Normal" },
   hard: { seconds: 60, label: "Hard" }
 };
+
 const svg = document.getElementById("map");
 const input = document.getElementById("answer");
 const score = document.getElementById("score");
@@ -461,12 +509,14 @@ const resultScore = document.getElementById("resultScore");
 const resultText = document.getElementById("resultText");
 const resultRestartButton = document.getElementById("result-restart");
 const resultMenuButton = document.getElementById("result-menu");
+
 let found = new Set();
 let seconds = DIFFICULTY_SETTINGS.normal.seconds;
 let timerId;
 let gameStarted = false;
 let selectedMode = "fylker";
 let selectedDifficulty = "normal";
+
 function normalize(text) {
   return text
     .toLowerCase()
@@ -474,356 +524,649 @@ function normalize(text) {
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
 }
+
 function drawMap(features) {
+
   svg.innerHTML = "";
+
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+
   function scan(coords) {
+
     if (typeof coords[0] === "number") {
+
       minX = Math.min(minX, coords[0]);
       maxX = Math.max(maxX, coords[0]);
+
       minY = Math.min(minY, coords[1]);
       maxY = Math.max(maxY, coords[1]);
+
       return;
     }
+
     coords.forEach(scan);
   }
+
   features.forEach(f => scan(f.geometry.coordinates));
+
   const width = 700;
   const isPC = window.innerWidth >= 700;
   const height = isPC ? 700 : 900;
   const padding = 18;
+
   const scale = Math.min(
     (width - padding * 2) / (maxX - minX),
     (height - padding * 2) / (maxY - minY)
   );
-  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  svg.setAttribute(
+    "viewBox",
+    `0 0 ${width} ${height}`
+  );
+
   function project(p) {
+
     return [
       (p[0] - minX) * scale + padding,
       height - ((p[1] - minY) * scale + padding)
     ];
+
   }
+
   function ring(points) {
+
     return points.map((p, i) => {
+
       const q = project(p);
+
       return (i ? "L" : "M") +
         q[0].toFixed(2) +
         " " +
         q[1].toFixed(2);
+
     }).join(" ") + " Z";
+
   }
+
   features.forEach(f => {
+
     const g = f.geometry;
     let d = "";
+
     if (g.type === "Polygon") {
-      d = g.coordinates.map(ring).join(" ");
+
+      d = g.coordinates
+        .map(ring)
+        .join(" ");
+
     }
+
     if (g.type === "MultiPolygon") {
+
       d = g.coordinates
         .map(poly => poly.map(ring).join(" "))
         .join(" ");
+
     }
+
     const path =
       document.createElementNS(
         "http://www.w3.org/2000/svg",
         "path"
       );
+
     path.setAttribute("d", d);
+
     path.classList.add("county");
+
     const propertiesText =
-      normalize(JSON.stringify(f.properties || {}));
-    path.dataset.properties = propertiesText;
+      normalize(
+        JSON.stringify(f.properties || {})
+      );
+
+    path.dataset.properties =
+      propertiesText;
+
     svg.appendChild(path);
+
   });
+
 }
+
 async function loadMap() {
+
   const response = await fetch(
     "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson"
   );
+
   if (!response.ok) {
     throw new Error("Kartet kunne ikke lastes");
   }
+
   const data = await response.json();
+
   drawMap(data.features);
+
 }
+
 function updateTimer() {
+
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
+
   timer.textContent =
     String(m).padStart(2, "0") +
     ":" +
     String(s).padStart(2, "0");
+
 }
+
 /* RESULTATSBOKS */
+
 function showResultScreen(type, count) {
+
   resultOverlay.classList.remove("hidden");
+
   resultScore.textContent =
     count + " / 15";
+
   if (type === "win") {
+
     /* 15/15 ER HELT UENDRET */
+
     resultEmoji.textContent = "🎉";
-    resultTitle.textContent = "Gratulerer!";
+
+    resultTitle.textContent =
+      "Gratulerer!";
+
     resultText.textContent =
       "Du fant alle fylkene! 😉";
+
   }
+
   if (type === "almost") {
+
     resultEmoji.textContent = "🔥";
-    resultTitle.textContent = "Bra jobbet!";
+
+    resultTitle.textContent =
+      "Bra jobbet!";
+
     resultText.textContent =
       "Nesten 😉";
+
   }
+
   if (type === "far") {
+
     resultEmoji.textContent = "😅";
-    resultTitle.textContent = "Godt forsøk!";
+
+    resultTitle.textContent =
+      "Godt forsøk!";
+
     resultText.textContent =
       "Langt i fra 😉";
+
   }
+
 }
+
 function hideResultScreen() {
+
   resultOverlay.classList.add("hidden");
+
 }
+
 function showMenu() {
+
   hideResultScreen();
+
   menu.classList.remove("hidden");
+
   input.disabled = true;
+
   input.value = "";
-  foundMessage.style.display = "none";
+
+  foundMessage.style.display =
+    "none";
+
   status.textContent =
     "Velg en spillmodus for å starte.";
+
 }
+
 function hideMenu() {
+
   menu.classList.add("hidden");
+
 }
+
 function resetGame() {
+
   clearInterval(timerId);
+
   hideResultScreen();
+
   found = new Set();
+
   gameStarted = false;
+
   seconds =
-    DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
-  score.querySelector("b").textContent = "0";
+    DIFFICULTY_SETTINGS[
+      selectedDifficulty
+    ].seconds;
+
+  score.querySelector("b").textContent =
+    "0";
+
   input.value = "";
-  foundMessage.style.display = "none";
+
+  foundMessage.style.display =
+    "none";
+
   updateTimer();
+
   svg.querySelectorAll(".county")
-    .forEach(p => p.classList.remove("found"));
+    .forEach(p =>
+      p.classList.remove("found")
+    );
+
   input.disabled = false;
+
   status.textContent =
     "Skriv inn fylkene så raskt du kan.";
+
   input.focus();
+
 }
-function startGame({ preserveInput = false } = {}) {
+
+function startGame(
+  { preserveInput = false } = {}
+) {
+
   clearInterval(timerId);
+
   hideResultScreen();
+
   found = new Set();
+
   gameStarted = true;
+
   seconds =
-    DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
-  score.querySelector("b").textContent = "0";
+    DIFFICULTY_SETTINGS[
+      selectedDifficulty
+    ].seconds;
+
+  score.querySelector("b").textContent =
+    "0";
+
   if (!preserveInput) {
     input.value = "";
   }
-  foundMessage.style.display = "none";
+
+  foundMessage.style.display =
+    "none";
+
   updateTimer();
+
   svg.querySelectorAll(".county")
-    .forEach(p => p.classList.remove("found"));
+    .forEach(p =>
+      p.classList.remove("found")
+    );
+
   input.disabled = false;
+
   status.textContent =
     "Skriv inn fylkene så raskt du kan.";
+
   timerId = setInterval(() => {
+
     seconds--;
+
     updateTimer();
+
     if (seconds <= 0) {
+
       clearInterval(timerId);
+
       input.disabled = true;
+
       gameStarted = false;
+
       status.textContent =
         "⏰ Tiden er ute!";
+
       if (found.size >= 8) {
+
         showResultScreen(
           "almost",
           found.size
         );
+
       } else {
+
         showResultScreen(
           "far",
           found.size
         );
+
       }
+
     }
+
   }, 1000);
+
   input.focus();
+
 }
+
 function goToMenu() {
+
   clearInterval(timerId);
+
   hideResultScreen();
+
   gameStarted = false;
+
   seconds =
-    DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
+    DIFFICULTY_SETTINGS[
+      selectedDifficulty
+    ].seconds;
+
   updateTimer();
+
   svg.querySelectorAll(".county")
-    .forEach(p => p.classList.remove("found"));
+    .forEach(p =>
+      p.classList.remove("found")
+    );
+
   found = new Set();
-  score.querySelector("b").textContent = "0";
+
+  score.querySelector("b").textContent =
+    "0";
+
   input.value = "";
+
   input.disabled = true;
-  foundMessage.style.display = "none";
+
+  foundMessage.style.display =
+    "none";
+
   status.textContent =
     "Velg en spillmodus for å starte.";
+
   menu.classList.remove("hidden");
+
 }
+
 /* SPILLMODUS */
+
 modeButtons.forEach(button => {
-  button.addEventListener("click", () => {
-    const chosenMode = button.dataset.mode;
-    if (chosenMode !== "fylker") {
-      status.textContent =
-        "Denne spillmodusen kommer senere.";
-      return;
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      const chosenMode =
+        button.dataset.mode;
+
+      if (chosenMode !== "fylker") {
+
+        status.textContent =
+          "Denne spillmodusen kommer senere.";
+
+        return;
+      }
+
+      selectedMode =
+        chosenMode;
+
+      modeButtons.forEach(btn => {
+
+        btn.classList.toggle(
+          "active",
+          btn.dataset.mode === chosenMode
+        );
+
+      });
+
     }
-    selectedMode = chosenMode;
-    modeButtons.forEach(btn => {
-      btn.classList.toggle(
-        "active",
-        btn.dataset.mode === chosenMode
-      );
-    });
-  });
+  );
+
 });
+
 /* VANSKELIGHET */
+
 difficultyButtons.forEach(button => {
-  button.addEventListener("click", () => {
-    selectedDifficulty =
-      button.dataset.difficulty;
-    difficultyButtons.forEach(btn => {
-      btn.classList.toggle(
-        "active",
-        btn.dataset.difficulty === selectedDifficulty
-      );
-    });
-    seconds =
-      DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
-    updateTimer();
-    if (!gameStarted) {
-      status.textContent =
-        `Vanskelighetsgrad: ${
-          DIFFICULTY_SETTINGS[selectedDifficulty].label
-        }`;
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      selectedDifficulty =
+        button.dataset.difficulty;
+
+      difficultyButtons.forEach(btn => {
+
+        btn.classList.toggle(
+          "active",
+          btn.dataset.difficulty ===
+            selectedDifficulty
+        );
+
+      });
+
+      seconds =
+        DIFFICULTY_SETTINGS[
+          selectedDifficulty
+        ].seconds;
+
+      updateTimer();
+
+      if (!gameStarted) {
+
+        status.textContent =
+          `Vanskelighetsgrad: ${
+            DIFFICULTY_SETTINGS[
+              selectedDifficulty
+            ].label
+          }`;
+
+      }
+
     }
-  });
+  );
+
 });
+
 /* START */
-startGameButton.addEventListener("click", () => {
-  hideMenu();
-  startGame();
-});
+
+startGameButton.addEventListener(
+  "click",
+  () => {
+
+    hideMenu();
+
+    startGame();
+
+  }
+);
+
 /* MENY */
+
 menuBackButton.addEventListener(
   "click",
   goToMenu
 );
+
 /* RESULTAT: START PÅ NYTT */
+
 resultRestartButton.addEventListener(
   "click",
   () => {
+
     hideResultScreen();
+
     startGame();
+
   }
 );
+
 /* RESULTAT: TILBAKE TIL MENY */
+
 resultMenuButton.addEventListener(
   "click",
   () => {
+
     hideResultScreen();
+
     goToMenu();
+
   }
 );
+
 /* SVAR */
+
 document
   .getElementById("form")
-  .addEventListener("submit", function(e) {
-    e.preventDefault();
-    if (!gameStarted) {
-      const firstAnswer =
-        input.value.trim();
-      startGame({
-        preserveInput: true
-      });
-      input.value = firstAnswer;
-    }
-    const answer =
-      normalize(input.value);
-    input.value = "";
-    const county =
-      COUNTIES.find(
-        x => normalize(x) === answer
-      );
-    if (!county) {
-      status.textContent =
-        "Ikke et fylkesnavn.";
-      return;
-    }
-    if (found.has(county)) {
-      status.textContent =
-        "Allerede funnet.";
-      return;
-    }
-    const answerName =
-      normalize(county);
-    const path =
-      [...svg.querySelectorAll(".county")]
-        .find(p => {
-          const properties =
-            p.dataset.properties || "";
-          return properties.includes(
-            answerName
-          );
+  .addEventListener(
+    "submit",
+    function(e) {
+
+      e.preventDefault();
+
+      if (!gameStarted) {
+
+        const firstAnswer =
+          input.value.trim();
+
+        startGame({
+          preserveInput: true
         });
-    if (!path) {
+
+        input.value =
+          firstAnswer;
+
+      }
+
+      const answer =
+        normalize(input.value);
+
+      input.value = "";
+
+      const county =
+        COUNTIES.find(
+          x =>
+            normalize(x) === answer
+        );
+
+      if (!county) {
+
+        status.textContent =
+          "Ikke et fylkesnavn.";
+
+        return;
+
+      }
+
+      if (found.has(county)) {
+
+        status.textContent =
+          "Allerede funnet.";
+
+        return;
+
+      }
+
+      const answerName =
+        normalize(county);
+
+      const path =
+        [...svg.querySelectorAll(".county")]
+          .find(p => {
+
+            const properties =
+              p.dataset.properties || "";
+
+            return properties.includes(
+              answerName
+            );
+
+          });
+
+      if (!path) {
+
+        status.textContent =
+          "Fylket ble funnet, men kartområdet ble ikke funnet.";
+
+        return;
+
+      }
+
+      found.add(county);
+
+      path.classList.add("found");
+
+      foundMessage.textContent =
+        "✓ " + county;
+
+      foundMessage.style.display =
+        "block";
+
+      score.querySelector("b").textContent =
+        found.size;
+
       status.textContent =
-        "Fylket ble funnet, men kartområdet ble ikke funnet.";
-      return;
+        "✓ " + county;
+
+      /* 15/15 */
+
+      if (found.size === 15) {
+
+        clearInterval(timerId);
+
+        input.disabled = true;
+
+        gameStarted = false;
+
+        status.textContent =
+          "🎉 Alle 15 fylkene!";
+
+        showResultScreen(
+          "win",
+          15
+        );
+
+      }
+
     }
-    found.add(county);
-    path.classList.add("found");
-    foundMessage.textContent =
-      "✓ " + county;
-    foundMessage.style.display =
-      "block";
-    score.querySelector("b").textContent =
-      found.size;
-    status.textContent =
-      "✓ " + county;
-    /* 15/15 */
-    if (found.size === 15) {
-      clearInterval(timerId);
-      input.disabled = true;
-      gameStarted = false;
-      status.textContent =
-        "🎉 Alle 15 fylkene!";
-      showResultScreen(
-        "win",
-        15
-      );
-    }
-  });
+  );
+
 /* START PÅ NYTT */
+
 document
   .getElementById("restart")
   .addEventListener(
     "click",
     resetGame
   );
+
 /* LAST KART */
+
 loadMap().catch(() => {
+
   status.textContent =
     "Kartet kunne ikke lastes.";
+
 });
+
 showMenu();
+
 updateTimer();
+
 </script>
+
 </body>
 </html>
