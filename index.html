@@ -191,7 +191,7 @@ button:hover {
 }
 
 .menu-panel {
-  width: min(540px, calc(100vw - 30px));
+  width: min(560px, calc(100vw - 30px));
   padding: 26px 20px 20px;
   border-radius: 26px;
   background: linear-gradient(180deg, rgba(10,17,24,0.98), rgba(15,22,29,0.98));
@@ -206,12 +206,22 @@ button:hover {
   letter-spacing: 0.04em;
 }
 
-.mode-list {
+.section-title {
+  margin: 18px 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mode-list,
+.difficulty-list {
   display: grid;
   gap: 12px;
 }
 
-.mode-btn {
+.mode-btn,
+.difficulty-btn {
   width: 100%;
   text-align: left;
   border-radius: 16px;
@@ -224,7 +234,8 @@ button:hover {
   padding: 18px 16px;
 }
 
-.mode-btn.active {
+.mode-btn.active,
+.difficulty-btn.active {
   background: linear-gradient(135deg, rgba(113,214,255,0.18), rgba(69,151,255,0.18));
   border-color: rgba(113,214,255,0.55);
   box-shadow: 0 12px 24px rgba(69, 151, 255, 0.15);
@@ -235,7 +246,8 @@ button:hover {
   cursor: not-allowed;
 }
 
-.mode-btn .small {
+.mode-btn .small,
+.difficulty-btn .small {
   display: block;
   font-size: 12px;
   color: var(--muted);
@@ -302,6 +314,25 @@ button:hover {
       </button>
     </div>
 
+    <div class="section-title">Vanskelighetsgrad</div>
+
+    <div class="difficulty-list">
+      <button type="button" class="difficulty-btn" data-difficulty="lett">
+        Lett
+        <span class="small">3 minutter</span>
+      </button>
+
+      <button type="button" class="difficulty-btn active" data-difficulty="normal">
+        Normal
+        <span class="small">2 minutter</span>
+      </button>
+
+      <button type="button" class="difficulty-btn" data-difficulty="hard">
+        Hard
+        <span class="small">1 minutt</span>
+      </button>
+    </div>
+
     <div id="menu-note">For nå er bare Fylker-spillet tilgjengelig.</div>
   </div>
 </div>
@@ -357,6 +388,12 @@ const COUNTIES = [
   "Østfold"
 ];
 
+const DIFFICULTY_SETTINGS = {
+  lett: { seconds: 180, label: "Lett" },
+  normal: { seconds: 120, label: "Normal" },
+  hard: { seconds: 60, label: "Hard" }
+};
+
 const svg = document.getElementById("map");
 const input = document.getElementById("answer");
 const score = document.getElementById("score");
@@ -365,12 +402,14 @@ const status = document.getElementById("status");
 const foundMessage = document.getElementById("foundMessage");
 const menu = document.getElementById("menu");
 const modeButtons = document.querySelectorAll(".mode-btn");
+const difficultyButtons = document.querySelectorAll(".difficulty-btn");
 
 let found = new Set();
-let seconds = 120;
+let seconds = DIFFICULTY_SETTINGS.normal.seconds;
 let timerId;
 let gameStarted = false;
 let selectedMode = "fylker";
+let selectedDifficulty = "normal";
 
 function normalize(text) {
   return text
@@ -490,7 +529,7 @@ function resetGame() {
 
   found = new Set();
   gameStarted = false;
-  seconds = 120;
+  seconds = DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
 
   score.querySelector("b").textContent = "0";
   input.value = "";
@@ -509,7 +548,7 @@ function startGame({ preserveInput = false } = {}) {
 
   found = new Set();
   gameStarted = true;
-  seconds = 120;
+  seconds = DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
 
   score.querySelector("b").textContent = "0";
   if (!preserveInput) {
@@ -554,6 +593,22 @@ modeButtons.forEach(button => {
 
     hideMenu();
     startGame();
+  });
+});
+
+difficultyButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    selectedDifficulty = button.dataset.difficulty;
+    difficultyButtons.forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.difficulty === selectedDifficulty);
+    });
+
+    seconds = DIFFICULTY_SETTINGS[selectedDifficulty].seconds;
+    updateTimer();
+
+    if (!gameStarted) {
+      status.textContent = `Vanskelighetsgrad: ${DIFFICULTY_SETTINGS[selectedDifficulty].label}`;
+    }
   });
 });
 
