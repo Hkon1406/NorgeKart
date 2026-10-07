@@ -229,19 +229,20 @@ function drawMap(features) {
   features.forEach(f => scan(f.geometry.coordinates));
 
   const width = 700;
-  const padding = 18;
+  const padding = 14;
+  const yOffset = 46;
+  const height = 600;
   const scale = Math.min(
     (width - padding * 2) / (maxX - minX),
-    600 / (maxY - minY)
+    (height - padding * 2) / (maxY - minY)
   );
 
-  const mapHeight = Math.max(380, (maxY - minY) * scale + padding * 2);
-  svg.setAttribute("viewBox", `0 0 ${width} ${mapHeight}`);
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
   function project(p) {
     return [
       (p[0] - minX) * scale + padding,
-      (p[1] - minY) * scale + padding
+      height - ((p[1] - minY) * scale + padding) - yOffset
     ];
   }
 
