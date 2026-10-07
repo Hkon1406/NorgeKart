@@ -9,7 +9,7 @@
 :root {
   --bg-1: #07131f;
   --bg-2: #0d1d2d;
-  --panel: rgba(13, 20, 27, 0.96);
+  --panel: rgba(13, 20, 27, 0.97);
   --panel-border: rgba(255,255,255,0.12);
   --text: #edf6ff;
   --muted: #aac2d8;
@@ -18,8 +18,6 @@
   --success: #2ee59d;
   --success-dark: #0a8d5b;
   --shadow: rgba(4, 10, 18, 0.7);
-  --warning: #ffbf47;
-  --danger: #ff5c7a;
 }
 
 * { box-sizing: border-box; }
@@ -177,8 +175,8 @@ button:hover {
 #menu {
   position: fixed;
   inset: 0;
-  background: rgba(4, 9, 14, 0.82);
-  backdrop-filter: blur(6px);
+  background: rgba(4, 9, 14, 0.88);
+  backdrop-filter: blur(7px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,18 +188,19 @@ button:hover {
 }
 
 .menu-panel {
-  width: min(540px, calc(100vw - 28px));
-  padding: 26px 18px 18px;
-  border-radius: 24px;
-  background: rgba(10, 17, 24, 0.98);
-  border: 1px solid var(--panel-border);
-  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
+  width: min(540px, calc(100vw - 30px));
+  padding: 26px 20px 20px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(10,17,24,0.98), rgba(15,22,29,0.98));
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 26px 55px rgba(0, 0, 0, 0.5);
 }
 
 .menu-title {
   margin: 0 0 18px 0;
   text-align: center;
-  font-size: 26px;
+  font-size: 28px;
+  letter-spacing: 0.04em;
 }
 
 .mode-list {
@@ -212,18 +211,20 @@ button:hover {
 .mode-btn {
   width: 100%;
   text-align: left;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(255,255,255,0.04);
   color: var(--text);
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: none;
   font-size: 18px;
   font-weight: 700;
+  padding: 18px 16px;
 }
 
 .mode-btn.active {
   background: linear-gradient(135deg, rgba(113,214,255,0.18), rgba(69,151,255,0.18));
-  border-color: rgba(113,214,255,0.5);
+  border-color: rgba(113,214,255,0.55);
+  box-shadow: 0 12px 24px rgba(69, 151, 255, 0.15);
 }
 
 .mode-btn.coming-soon {
@@ -481,6 +482,25 @@ function hideMenu() {
   menu.classList.add("hidden");
 }
 
+function resetGame() {
+  clearInterval(timerId);
+
+  found = new Set();
+  gameStarted = false;
+  seconds = 120;
+
+  score.querySelector("b").textContent = "0";
+  input.value = "";
+  foundMessage.style.display = "none";
+
+  updateTimer();
+
+  svg.querySelectorAll(".county").forEach(p => p.classList.remove("found"));
+  input.disabled = false;
+  status.textContent = "Skriv inn fylkene så raskt du kan.";
+  input.focus();
+}
+
 function startGame({ preserveInput = false } = {}) {
   clearInterval(timerId);
 
@@ -587,10 +607,7 @@ document.getElementById("form").addEventListener("submit", function(e) {
   }
 });
 
-document.getElementById("restart").addEventListener("click", () => {
-  hideMenu();
-  startGame();
-});
+document.getElementById("restart").addEventListener("click", resetGame);
 
 loadMap().catch(() => {
   status.textContent = "Kartet kunne ikke lastes.";
