@@ -20,18 +20,19 @@ main {
 }
 
 h1 {
-  margin-bottom: 5px;
+  margin: 0 0 8px 0;
+  font-size: 24px;
 }
 
 #timer {
   font-size: 32px;
   font-weight: bold;
-  margin: 0;
+  margin: 0 0 12px 0;
 }
 
 .map-container {
   position: relative;
-  margin-top: 0;
+  margin: 0;
 }
 
 .map-controls {
@@ -61,7 +62,7 @@ h1 {
 #map {
   width: 100%;
   display: block;
-  margin-top: 0;
+  margin: 0;
   background: #222;
   border-radius: 12px;
 }
@@ -79,7 +80,7 @@ h1 {
 .controls {
   display: flex;
   gap: 8px;
-  margin-top: 15px;
+  margin: 12px 0 0 0;
 }
 
 input {
@@ -100,8 +101,18 @@ button {
 }
 
 #status {
-  margin-top: 10px;
+  margin: 8px 0 0 0;
   color: #aaa;
+  font-size: 14px;
+}
+
+#score {
+  margin: 12px 0 0 0;
+  display: block;
+}
+
+#restart {
+  margin: 8px 0 0 0;
 }
 
 @media (min-width: 700px) {
@@ -118,13 +129,13 @@ button {
 
 @media (max-width: 699px) {
   .map-container {
-    margin-top: 0;
+    margin: 0;
   }
 
   #map {
     height: auto;
     width: 100%;
-    margin-top: 0;
+    margin: 0;
   }
 
   .map-controls {
@@ -160,8 +171,8 @@ button {
 Skriv inn fylkene så raskt du kan.
 </div>
 
-<p>
-  <b id="score">0</b> / 15 fylker
+<p id="score">
+  <b>0</b> / 15 fylker
 </p>
 
 <button id="restart">Start på nytt</button>
@@ -307,7 +318,7 @@ function startGame({ preserveInput = false } = {}) {
   gameStarted = true;
   seconds = 120;
 
-  score.textContent = "0";
+  score.querySelector("b").textContent = "0";
   if (!preserveInput) {
     input.value = "";
   }
@@ -376,7 +387,7 @@ document.getElementById("form").addEventListener("submit", function(e) {
   foundMessage.textContent = "✓ " + county;
   foundMessage.style.display = "block";
 
-  score.textContent = found.size;
+  score.querySelector("b").textContent = found.size;
   status.textContent = "✓ " + county;
 
   if (found.size === 15) {
