@@ -18,6 +18,8 @@
   --success: #2ee59d;
   --success-dark: #0a8d5b;
   --shadow: rgba(4, 10, 18, 0.55);
+  --warning: #ffbf47;
+  --danger: #ff5c7a;
 }
 
 * { box-sizing: border-box; }
@@ -139,6 +141,7 @@ button {
   color: #061418;
   font-weight: 800;
   box-shadow: 0 12px 20px rgba(69, 151, 255, 0.25);
+  cursor: pointer;
 }
 
 button:hover {
@@ -165,6 +168,78 @@ button:hover {
   color: var(--text);
   border: 1px solid rgba(255,255,255,0.12);
   box-shadow: none;
+}
+
+#menu {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 9, 14, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+}
+
+#menu.hidden {
+  display: none;
+}
+
+.menu-panel {
+  width: min(520px, calc(100vw - 24px));
+  padding: 24px 18px 18px;
+  border-radius: 22px;
+  background: rgba(10, 17, 24, 0.95);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.4);
+}
+
+.menu-title {
+  margin: 0 0 18px 0;
+  text-align: center;
+  font-size: 26px;
+}
+
+.mode-list {
+  display: grid;
+  gap: 12px;
+}
+
+.mode-btn {
+  width: 100%;
+  text-align: left;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: none;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, rgba(113,214,255,0.18), rgba(69,151,255,0.18));
+  border-color: rgba(113,214,255,0.5);
+}
+
+.mode-btn.coming-soon {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mode-btn .small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+#menu-note {
+  margin-top: 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 @media (min-width: 700px) {
@@ -198,6 +273,31 @@ button:hover {
 
 <body>
 
+<div id="menu">
+  <div class="menu-panel">
+    <h2 class="menu-title">Velg spillmodus</h2>
+
+    <div class="mode-list">
+      <button type="button" class="mode-btn active" data-mode="fylker">
+        Fylker
+        <span class="small">Nåværende spill</span>
+      </button>
+
+      <button type="button" class="mode-btn coming-soon" data-mode="kommuner">
+        Alle kommuner
+        <span class="small">Kommer snart</span>
+      </button>
+
+      <button type="button" class="mode-btn coming-soon" data-mode="kommuner-fylke">
+        Kommuner i et fylke
+        <span class="small">Kommer snart</span>
+      </button>
+    </div>
+
+    <div id="menu-note">For nå er bare Fylker-spillet tilgjengelig.</div>
+  </div>
+</div>
+
 <main>
 
 <h1>🇳🇴 Fylkene</h1>
@@ -215,7 +315,7 @@ button:hover {
 
 <form id="form" class="controls">
   <input id="answer" placeholder="Skriv et fylke..." autocomplete="off">
-  <button>OK</button>
+  <button type="submit">OK</button>
 </form>
 
 <div id="status">
@@ -226,7 +326,7 @@ Skriv inn fylkene så raskt du kan.
   <b>0</b> / 15 fylker
 </p>
 
-<button id="restart">Start på nytt</button>
+<button id="restart" type="button">Start på nytt</button>
 
 </main>
 
@@ -255,11 +355,14 @@ const score = document.getElementById("score");
 const timer = document.getElementById("timer");
 const status = document.getElementById("status");
 const foundMessage = document.getElementById("foundMessage");
+const menu = document.getElementById("menu");
+const modeButtons = document.querySelectorAll(".mode-btn");
 
 let found = new Set();
 let seconds = 120;
 let timerId;
 let gameStarted = false;
+let selectedMode = "fylker";
 
 function normalize(text) {
   return text
@@ -362,6 +465,18 @@ function updateTimer() {
   timer.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
 }
 
+function showMenu() {
+  menu.classList.remove("hidden");
+  input.disabled = true;
+  input.value = "";
+  foundMessage.style.display = "none";
+  status.textContent = "Velg en spillmodus for å starte.";
+}
+
+function hideMenu() {
+  menu.classList.add("hidden");
+}
+
 function startGame({ preserveInput = false } = {}) {
   clearInterval(timerId);
 
@@ -395,6 +510,25 @@ function startGame({ preserveInput = false } = {}) {
 
   input.focus();
 }
+
+modeButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    const chosenMode = button.dataset.mode;
+
+    if (chosenMode !== "fylker") {
+      status.textContent = "Denne spillmodusen kommer senere.";
+      return;
+    }
+
+    selectedMode = chosenMode;
+    modeButtons.forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.mode === chosenMode);
+    });
+
+    hideMenu();
+    startGame();
+  });
+});
 
 document.getElementById("form").addEventListener("submit", function(e) {
   e.preventDefault();
@@ -449,12 +583,16 @@ document.getElementById("form").addEventListener("submit", function(e) {
   }
 });
 
-document.getElementById("restart").addEventListener("click", startGame);
+document.getElementById("restart").addEventListener("click", () => {
+  hideMenu();
+  startGame();
+});
 
 loadMap().catch(() => {
   status.textContent = "Kartet kunne ikke lastes.";
 });
 
+showMenu();
 updateTimer();
 </script>
 
