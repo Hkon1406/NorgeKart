@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fylkene</title>
+<title>NorgeKart</title>
 
 <style>
 :root {
@@ -346,6 +346,109 @@ button:hover {
   font-size: 13px;
 }
 
+/* FYLKEVALG */
+
+#countyPicker {
+  position: fixed;
+  inset: 0;
+
+  width: 166.6667vw;
+  height: 166.6667vh;
+
+  z-index: 150;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(4, 9, 14, 0.98);
+  backdrop-filter: blur(8px);
+}
+
+#countyPicker.hidden {
+  display: none;
+}
+
+.county-picker-panel {
+  width: min(560px, calc(100vw - 30px));
+  max-height: 90vh;
+  overflow-y: auto;
+
+  padding: 26px 20px 20px;
+
+  border-radius: 26px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(10,17,24,0.98),
+    rgba(15,22,29,0.98)
+  );
+
+  border: 1px solid rgba(255,255,255,0.1);
+
+  box-shadow:
+    0 26px 55px rgba(0, 0, 0, 0.5);
+}
+
+.county-picker-title {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 28px;
+}
+
+.county-picker-subtitle {
+  margin: 0 0 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.county-choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.county-choice {
+  width: 100%;
+  text-align: center;
+  padding: 15px 10px;
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: none;
+
+  font-size: 16px;
+}
+
+.county-choice:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(113,214,255,0.18),
+    rgba(69,151,255,0.18)
+  );
+
+  border-color: rgba(113,214,255,0.55);
+}
+
+#county-picker-back {
+  width: 100%;
+  margin-top: 14px;
+
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: none;
+
+  text-align: center;
+}
+
 /* RESULTATSBOKS */
 
 #resultOverlay {
@@ -451,6 +554,10 @@ button:hover {
   button {
     width: 100%;
   }
+
+  .county-choice-list {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
@@ -492,12 +599,12 @@ button:hover {
 
       <button
         type="button"
-        class="mode-btn coming-soon"
+        class="mode-btn"
         data-mode="kommuner-fylke"
       >
         Kommuner i et fylke
         <span class="small">
-          Kommer snart
+          Velg et fylke og finn kommunene
         </span>
       </button>
 
@@ -549,10 +656,40 @@ button:hover {
     </button>
 
     <div id="menu-note">
-      For nå er bare Fylker-spillet tilgjengelig.
+      Velg en spillmodus for å starte.
     </div>
 
   </div>
+</div>
+
+<!-- FYLKEVALG -->
+
+<div id="countyPicker" class="hidden">
+
+  <div class="county-picker-panel">
+
+    <h2 class="county-picker-title">
+      Velg fylke
+    </h2>
+
+    <p class="county-picker-subtitle">
+      Finn alle kommunene i fylket du velger.
+    </p>
+
+    <div
+      id="countyChoiceList"
+      class="county-choice-list"
+    ></div>
+
+    <button
+      id="county-picker-back"
+      type="button"
+    >
+      Tilbake til meny
+    </button>
+
+  </div>
+
 </div>
 
 <!-- RESULTATSBOKS -->
@@ -580,7 +717,7 @@ button:hover {
     </div>
 
     <p id="resultText">
-      Du fant alle fylkene! 😉
+      Du fant alle!
     </p>
 
     <button
@@ -603,7 +740,7 @@ button:hover {
 
 <main>
 
-<h1>🇳🇴 Fylkene</h1>
+<h1 id="gameTitle">🇳🇴 Fylkene</h1>
 
 <div class="map-container">
 
@@ -754,6 +891,18 @@ const resultRestartButton =
 const resultMenuButton =
   document.getElementById("result-menu");
 
+const countyPicker =
+  document.getElementById("countyPicker");
+
+const countyChoiceList =
+  document.getElementById("countyChoiceList");
+
+const countyPickerBack =
+  document.getElementById("county-picker-back");
+
+const gameTitle =
+  document.getElementById("gameTitle");
+
 let found = new Set();
 
 let seconds =
@@ -767,7 +916,25 @@ let selectedMode = "fylker";
 
 let selectedDifficulty = "normal";
 
+let selectedCounty = "";
+
+let currentFeatures = [];
+
+let currentAnswerList = [];
+
+let currentTotal = 15;
+
+let currentMapType = "county";
+
+let fylkeFeatures = [];
+
+let kommuneFeatures = [];
+
+
+/* ---------------- NORMALIZE ---------------- */
+
 function normalize(text) {
+
   return text
     .toLowerCase()
     .normalize("NFD")
@@ -778,9 +945,79 @@ function normalize(text) {
     .trim();
 }
 
+
+/* ---------------- PROPERTY HELPERS ---------------- */
+
+function getProperty(properties, possibleNames) {
+
+  const keys =
+    Object.keys(properties || {});
+
+  for (const wanted of possibleNames) {
+
+    const exact =
+      keys.find(
+        key =>
+          normalize(key) ===
+          normalize(wanted)
+      );
+
+    if (exact) {
+      return properties[exact];
+    }
+  }
+
+  return "";
+}
+
+function getCountyName(feature) {
+
+  const properties =
+    feature.properties || {};
+
+  return String(
+    getProperty(
+      properties,
+      [
+        "fylkesnavn",
+        "fylkenavn",
+        "fylke",
+        "Fylkesnavn",
+        "Fylke"
+      ]
+    ) || ""
+  );
+}
+
+function getMunicipalityName(feature) {
+
+  const properties =
+    feature.properties || {};
+
+  return String(
+    getProperty(
+      properties,
+      [
+        "kommunenavn",
+        "kommunenavn",
+        "kommune",
+        "Kommunenavn",
+        "Kommune"
+      ]
+    ) || ""
+  );
+}
+
+
+/* ---------------- MAP DRAWING ---------------- */
+
 function drawMap(features) {
 
   svg.innerHTML = "";
+
+  if (!features.length) {
+    return;
+  }
 
   let minX = Infinity;
   let minY = Infinity;
@@ -819,9 +1056,18 @@ function drawMap(features) {
     coords.forEach(scan);
   }
 
-  features.forEach(f =>
-    scan(f.geometry.coordinates)
-  );
+  features.forEach(f => {
+
+    if (
+      f.geometry &&
+      f.geometry.coordinates
+    ) {
+      scan(
+        f.geometry.coordinates
+      );
+    }
+
+  });
 
   const width = 700;
 
@@ -833,12 +1079,18 @@ function drawMap(features) {
 
   const padding = 18;
 
+  const dataWidth =
+    maxX - minX;
+
+  const dataHeight =
+    maxY - minY;
+
   const scale = Math.min(
     (width - padding * 2) /
-      (maxX - minX),
+      dataWidth,
 
     (height - padding * 2) /
-      (maxY - minY)
+      dataHeight
   );
 
   svg.setAttribute(
@@ -867,7 +1119,8 @@ function drawMap(features) {
     return points
       .map((p, i) => {
 
-        const q = project(p);
+        const q =
+          project(p);
 
         return (
           i ? "L" : "M"
@@ -882,25 +1135,38 @@ function drawMap(features) {
 
   features.forEach(f => {
 
-    const g = f.geometry;
+    const g =
+      f.geometry;
+
+    if (!g) {
+      return;
+    }
 
     let d = "";
 
-    if (g.type === "Polygon") {
+    if (
+      g.type === "Polygon"
+    ) {
 
-      d = g.coordinates
-        .map(ring)
-        .join(" ");
+      d =
+        g.coordinates
+          .map(ring)
+          .join(" ");
 
     }
 
-    if (g.type === "MultiPolygon") {
+    if (
+      g.type === "MultiPolygon"
+    ) {
 
-      d = g.coordinates
-        .map(poly =>
-          poly.map(ring).join(" ")
-        )
-        .join(" ");
+      d =
+        g.coordinates
+          .map(poly =>
+            poly
+              .map(ring)
+              .join(" ")
+          )
+          .join(" ");
 
     }
 
@@ -919,39 +1185,77 @@ function drawMap(features) {
       "county"
     );
 
-    const propertiesText =
-      normalize(
-        JSON.stringify(
-          f.properties || {}
-        )
-      );
-
-    path.dataset.properties =
-      propertiesText;
+    path.dataset.name =
+      currentMapType === "county"
+        ? getCountyName(f)
+        : getMunicipalityName(f);
 
     svg.appendChild(path);
 
   });
 }
 
-async function loadMap() {
 
-  const response =
-    await fetch(
+/* ---------------- LOAD MAPS ---------------- */
+
+async function loadMaps() {
+
+  const [
+    fylkeResponse,
+    kommuneResponse
+  ] = await Promise.all([
+
+    fetch(
       "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Fylker-M.geojson"
-    );
+    ),
 
-  if (!response.ok) {
+    fetch(
+      "https://raw.githubusercontent.com/robhop/fylker-og-kommuner/main/Kommuner-M.geojson"
+    )
+
+  ]);
+
+  if (
+    !fylkeResponse.ok ||
+    !kommuneResponse.ok
+  ) {
+
     throw new Error(
-      "Kartet kunne ikke lastes"
+      "Kartene kunne ikke lastes"
     );
   }
 
-  const data =
-    await response.json();
+  const fylkeData =
+    await fylkeResponse.json();
 
-  drawMap(data.features);
+  const kommuneData =
+    await kommuneResponse.json();
+
+  fylkeFeatures =
+    fylkeData.features || [];
+
+  kommuneFeatures =
+    kommuneData.features || [];
+
+  currentFeatures =
+    fylkeFeatures;
+
+  currentAnswerList =
+    COUNTIES;
+
+  currentTotal =
+    COUNTIES.length;
+
+  currentMapType =
+    "county";
+
+  drawMap(
+    currentFeatures
+  );
 }
+
+
+/* ---------------- TIMER ---------------- */
 
 function updateTimer() {
 
@@ -967,6 +1271,9 @@ function updateTimer() {
     String(s).padStart(2, "0");
 }
 
+
+/* ---------------- RESULTAT ---------------- */
+
 function showResultScreen(
   type,
   count
@@ -977,22 +1284,28 @@ function showResultScreen(
   );
 
   resultScore.textContent =
-    count + " / 15";
+    count +
+    " / " +
+    currentTotal;
 
   if (type === "win") {
 
-    resultEmoji.textContent = "🎉";
+    resultEmoji.textContent =
+      "🎉";
 
     resultTitle.textContent =
       "Gratulerer!";
 
     resultText.textContent =
-      "Du fant alle fylkene! 😉";
+      currentMapType === "county"
+        ? "Du fant alle fylkene! 😉"
+        : "Du fant alle kommunene! 😉";
   }
 
   if (type === "almost") {
 
-    resultEmoji.textContent = "🔥";
+    resultEmoji.textContent =
+      "🔥";
 
     resultTitle.textContent =
       "Bra jobbet!";
@@ -1003,7 +1316,8 @@ function showResultScreen(
 
   if (type === "far") {
 
-    resultEmoji.textContent = "😅";
+    resultEmoji.textContent =
+      "😅";
 
     resultTitle.textContent =
       "Godt forsøk!";
@@ -1020,9 +1334,16 @@ function hideResultScreen() {
   );
 }
 
+
+/* ---------------- MENY ---------------- */
+
 function showMenu() {
 
   hideResultScreen();
+
+  countyPicker.classList.add(
+    "hidden"
+  );
 
   menu.classList.remove(
     "hidden"
@@ -1046,13 +1367,17 @@ function hideMenu() {
   );
 }
 
+
+/* ---------------- RESET ---------------- */
+
 function resetGame() {
 
   clearInterval(timerId);
 
   hideResultScreen();
 
-  found = new Set();
+  found =
+    new Set();
 
   gameStarted = false;
 
@@ -1083,10 +1408,15 @@ function resetGame() {
   input.disabled = false;
 
   status.textContent =
-    "Skriv inn fylkene så raskt du kan.";
+    currentMapType === "county"
+      ? "Skriv inn fylkene så raskt du kan."
+      : "Skriv inn kommunene så raskt du kan.";
 
   input.focus();
 }
+
+
+/* ---------------- START GAME ---------------- */
 
 function startGame(
   { preserveInput = false } = {}
@@ -1096,7 +1426,8 @@ function startGame(
 
   hideResultScreen();
 
-  found = new Set();
+  found =
+    new Set();
 
   gameStarted = true;
 
@@ -1129,45 +1460,180 @@ function startGame(
   input.disabled = false;
 
   status.textContent =
-    "Skriv inn fylkene så raskt du kan.";
+    currentMapType === "county"
+      ? "Skriv inn fylkene så raskt du kan."
+      : "Skriv inn kommunene så raskt du kan.";
 
-  timerId = setInterval(() => {
+  timerId =
+    setInterval(() => {
 
-    seconds--;
+      seconds--;
 
-    updateTimer();
+      updateTimer();
 
-    if (seconds <= 0) {
+      if (seconds <= 0) {
 
-      clearInterval(timerId);
-
-      input.disabled = true;
-
-      gameStarted = false;
-
-      status.textContent =
-        "⏰ Tiden er ute!";
-
-      if (found.size >= 8) {
-
-        showResultScreen(
-          "almost",
-          found.size
+        clearInterval(
+          timerId
         );
 
-      } else {
+        input.disabled =
+          true;
 
-        showResultScreen(
-          "far",
-          found.size
-        );
+        gameStarted =
+          false;
+
+        status.textContent =
+          "⏰ Tiden er ute!";
+
+        if (
+          found.size >=
+          Math.ceil(
+            currentTotal * 0.53
+          )
+        ) {
+
+          showResultScreen(
+            "almost",
+            found.size
+          );
+
+        } else {
+
+          showResultScreen(
+            "far",
+            found.size
+          );
+        }
       }
-    }
 
-  }, 1000);
+    }, 1000);
 
   input.focus();
 }
+
+
+/* ---------------- COUNTY PICKER ---------------- */
+
+function openCountyPicker() {
+
+  clearInterval(timerId);
+
+  hideResultScreen();
+
+  menu.classList.add(
+    "hidden"
+  );
+
+  countyPicker.classList.remove(
+    "hidden"
+  );
+
+  countyChoiceList.innerHTML =
+    "";
+
+  COUNTIES.forEach(county => {
+
+    const button =
+      document.createElement(
+        "button"
+      );
+
+    button.type =
+      "button";
+
+    button.className =
+      "county-choice";
+
+    button.textContent =
+      county;
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        chooseCounty(
+          county
+        );
+
+      }
+    );
+
+    countyChoiceList.appendChild(
+      button
+    );
+
+  });
+}
+
+
+/* ---------------- CHOOSE COUNTY ---------------- */
+
+function chooseCounty(county) {
+
+  selectedCounty =
+    county;
+
+  const matchingFeatures =
+    kommuneFeatures.filter(
+      feature =>
+        normalize(
+          getCountyName(feature)
+        ) ===
+        normalize(county)
+    );
+
+  if (
+    matchingFeatures.length === 0
+  ) {
+
+    status.textContent =
+      "Fant ingen kommuner i dette fylket.";
+
+    return;
+  }
+
+  currentFeatures =
+    matchingFeatures;
+
+  currentAnswerList =
+    matchingFeatures
+      .map(
+        getMunicipalityName
+      )
+      .filter(Boolean);
+
+  currentTotal =
+    currentAnswerList.length;
+
+  currentMapType =
+    "municipality";
+
+  countyPicker.classList.add(
+    "hidden"
+  );
+
+  gameTitle.textContent =
+    "🇳🇴 " +
+    selectedCounty;
+
+  input.placeholder =
+    "Skriv en kommune...";
+
+  score.innerHTML =
+    "<b>0</b> / " +
+    currentTotal +
+    " kommuner";
+
+  drawMap(
+    currentFeatures
+  );
+
+  startGame();
+}
+
+
+/* ---------------- RETURN TO MENU ---------------- */
 
 function goToMenu() {
 
@@ -1175,7 +1641,33 @@ function goToMenu() {
 
   hideResultScreen();
 
-  gameStarted = false;
+  countyPicker.classList.add(
+    "hidden"
+  );
+
+  gameStarted =
+    false;
+
+  selectedCounty =
+    "";
+
+  currentFeatures =
+    fylkeFeatures;
+
+  currentAnswerList =
+    COUNTIES;
+
+  currentTotal =
+    COUNTIES.length;
+
+  currentMapType =
+    "county";
+
+  gameTitle.textContent =
+    "🇳🇴 Fylkene";
+
+  input.placeholder =
+    "Skriv et fylke...";
 
   seconds =
     DIFFICULTY_SETTINGS[
@@ -1184,23 +1676,20 @@ function goToMenu() {
 
   updateTimer();
 
-  svg.querySelectorAll(
-    ".county"
-  ).forEach(p =>
-    p.classList.remove(
-      "found"
-    )
+  drawMap(
+    currentFeatures
   );
 
-  found = new Set();
+  found =
+    new Set();
 
-  score.querySelector(
-    "b"
-  ).textContent = "0";
+  score.innerHTML =
+    "<b>0</b> / 15 fylker";
 
   input.value = "";
 
-  input.disabled = true;
+  input.disabled =
+    true;
 
   foundMessage.style.display =
     "none";
@@ -1213,6 +1702,9 @@ function goToMenu() {
   );
 }
 
+
+/* ---------------- MODE BUTTONS ---------------- */
+
 modeButtons.forEach(button => {
 
   button.addEventListener(
@@ -1223,7 +1715,33 @@ modeButtons.forEach(button => {
         button.dataset.mode;
 
       if (
-        chosenMode !== "fylker"
+        chosenMode ===
+        "kommuner-fylke"
+      ) {
+
+        selectedMode =
+          chosenMode;
+
+        modeButtons.forEach(
+          btn =>
+            btn.classList.toggle(
+              "active",
+              btn.dataset.mode ===
+                chosenMode
+            )
+        );
+
+        document.getElementById(
+          "menu-note"
+        ).textContent =
+          "Du velger fylke etter at du trykker Start.";
+
+        return;
+      }
+
+      if (
+        chosenMode !==
+        "fylker"
       ) {
 
         status.textContent =
@@ -1235,20 +1753,27 @@ modeButtons.forEach(button => {
       selectedMode =
         chosenMode;
 
-      modeButtons.forEach(btn => {
+      modeButtons.forEach(
+        btn =>
+          btn.classList.toggle(
+            "active",
+            btn.dataset.mode ===
+              chosenMode
+          )
+      );
 
-        btn.classList.toggle(
-          "active",
-          btn.dataset.mode ===
-            chosenMode
-        );
-
-      });
+      document.getElementById(
+        "menu-note"
+      ).textContent =
+        "Velg en spillmodus for å starte.";
 
     }
   );
 
 });
+
+
+/* ---------------- DIFFICULTY ---------------- */
 
 difficultyButtons.forEach(button => {
 
@@ -1259,15 +1784,14 @@ difficultyButtons.forEach(button => {
       selectedDifficulty =
         button.dataset.difficulty;
 
-      difficultyButtons.forEach(btn => {
-
-        btn.classList.toggle(
-          "active",
-          btn.dataset.difficulty ===
-            selectedDifficulty
-        );
-
-      });
+      difficultyButtons.forEach(
+        btn =>
+          btn.classList.toggle(
+            "active",
+            btn.dataset.difficulty ===
+              selectedDifficulty
+          )
+      );
 
       seconds =
         DIFFICULTY_SETTINGS[
@@ -1291,21 +1815,83 @@ difficultyButtons.forEach(button => {
 
 });
 
+
+/* ---------------- START BUTTON ---------------- */
+
 startGameButton.addEventListener(
   "click",
   () => {
 
+    if (
+      selectedMode ===
+      "kommuner-fylke"
+    ) {
+
+      openCountyPicker();
+
+      return;
+    }
+
     hideMenu();
+
+    currentFeatures =
+      fylkeFeatures;
+
+    currentAnswerList =
+      COUNTIES;
+
+    currentTotal =
+      COUNTIES.length;
+
+    currentMapType =
+      "county";
+
+    gameTitle.textContent =
+      "🇳🇴 Fylkene";
+
+    input.placeholder =
+      "Skriv et fylke...";
+
+    score.innerHTML =
+      "<b>0</b> / 15 fylker";
+
+    drawMap(
+      currentFeatures
+    );
 
     startGame();
 
   }
 );
 
+
+/* ---------------- BACK FROM COUNTY PICKER ---------------- */
+
+countyPickerBack.addEventListener(
+  "click",
+  () => {
+
+    countyPicker.classList.add(
+      "hidden"
+    );
+
+    menu.classList.remove(
+      "hidden"
+    );
+
+  }
+);
+
+
+/* ---------------- MENU BACK BUTTON ---------------- */
+
 menuBackButton.addEventListener(
   "click",
   goToMenu
 );
+
+
+/* ---------------- RESULT RESTART ---------------- */
 
 resultRestartButton.addEventListener(
   "click",
@@ -1318,6 +1904,9 @@ resultRestartButton.addEventListener(
   }
 );
 
+
+/* ---------------- RESULT MENU ---------------- */
+
 resultMenuButton.addEventListener(
   "click",
   () => {
@@ -1328,6 +1917,9 @@ resultMenuButton.addEventListener(
 
   }
 );
+
+
+/* ---------------- ANSWER FORM ---------------- */
 
 document
   .getElementById("form")
@@ -1351,26 +1943,35 @@ document
       }
 
       const answer =
-        normalize(input.value);
+        normalize(
+          input.value
+        );
 
-      input.value = "";
+      input.value =
+        "";
 
-      const county =
-        COUNTIES.find(
-          x =>
-            normalize(x) ===
+      const matchingName =
+        currentAnswerList.find(
+          name =>
+            normalize(name) ===
             answer
         );
 
-      if (!county) {
+      if (!matchingName) {
 
         status.textContent =
-          "Ikke et fylkesnavn.";
+          currentMapType === "county"
+            ? "Ikke et fylkesnavn."
+            : "Ikke et kommunenavn.";
 
         return;
       }
 
-      if (found.has(county)) {
+      if (
+        found.has(
+          matchingName
+        )
+      ) {
 
         status.textContent =
           "Allerede funnet.";
@@ -1378,38 +1979,39 @@ document
         return;
       }
 
-      const answerName =
-        normalize(county);
-
       const path =
         [
           ...svg.querySelectorAll(
             ".county"
           )
-        ].find(p => {
-
-          const properties =
-            p.dataset.properties || "";
-
-          return properties.includes(
-            answerName
-          );
-        });
+        ].find(p =>
+          normalize(
+            p.dataset.name || ""
+          ) ===
+          normalize(
+            matchingName
+          )
+        );
 
       if (!path) {
 
         status.textContent =
-          "Fylket ble funnet, men kartområdet ble ikke funnet.";
+          "Området ble funnet, men kartområdet ble ikke funnet.";
 
         return;
       }
 
-      found.add(county);
+      found.add(
+        matchingName
+      );
 
-      path.classList.add("found");
+      path.classList.add(
+        "found"
+      );
 
       foundMessage.textContent =
-        "✓ " + county;
+        "✓ " +
+        matchingName;
 
       foundMessage.style.display =
         "block";
@@ -1420,27 +2022,40 @@ document
         found.size;
 
       status.textContent =
-        "✓ " + county;
+        "✓ " +
+        matchingName;
 
-      if (found.size === 15) {
+      if (
+        found.size ===
+        currentTotal
+      ) {
 
-        clearInterval(timerId);
+        clearInterval(
+          timerId
+        );
 
-        input.disabled = true;
+        input.disabled =
+          true;
 
-        gameStarted = false;
+        gameStarted =
+          false;
 
         status.textContent =
-          "🎉 Alle 15 fylkene!";
+          currentMapType === "county"
+            ? "🎉 Alle 15 fylkene!"
+            : "🎉 Alle kommunene!";
 
         showResultScreen(
           "win",
-          15
+          found.size
         );
       }
 
     }
   );
+
+
+/* ---------------- RESTART ---------------- */
 
 document
   .getElementById("restart")
@@ -1449,12 +2064,16 @@ document
     resetGame
   );
 
-loadMap().catch(() => {
 
-  status.textContent =
-    "Kartet kunne ikke lastes.";
+/* ---------------- LOAD ---------------- */
 
-});
+loadMaps()
+  .catch(() => {
+
+    status.textContent =
+      "Kartet kunne ikke lastes.";
+
+  });
 
 showMenu();
 updateTimer();
