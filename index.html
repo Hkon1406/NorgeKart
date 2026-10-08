@@ -816,6 +816,38 @@ const COUNTIES = [
   "Østfold"
 ];
 
+
+/* ---------------- FYLKESNUMMER ---------------- */
+
+const COUNTY_CODES = {
+  "03": "Oslo",
+  "11": "Rogaland",
+  "15": "Møre og Romsdal",
+  "18": "Nordland",
+  "31": "Østfold",
+  "32": "Akershus",
+  "33": "Buskerud",
+  "34": "Innlandet",
+  "39": "Vestfold",
+  "40": "Telemark",
+  "42": "Agder",
+  "46": "Vestland",
+  "50": "Trøndelag",
+  "55": "Troms",
+  "56": "Finnmark"
+};
+
+const COUNTY_NAME_TO_CODE = {};
+
+Object.entries(COUNTY_CODES).forEach(
+  ([code, name]) => {
+    COUNTY_NAME_TO_CODE[
+      normalize(name)
+    ] = code;
+  }
+);
+
+
 const DIFFICULTY_SETTINGS = {
   lett: {
     seconds: 180,
@@ -945,12 +977,17 @@ function normalize(text) {
 
 /* ---------------- PROPERTY HELPERS ---------------- */
 
-function getProperty(properties, possibleNames) {
+function getProperty(
+  properties,
+  possibleNames
+) {
 
   const keys =
     Object.keys(properties || {});
 
-  for (const wanted of possibleNames) {
+  for (
+    const wanted of possibleNames
+  ) {
 
     const exact =
       keys.find(
@@ -968,35 +1005,209 @@ function getProperty(properties, possibleNames) {
 }
 
 
-function getCountyName(feature) {
+/* ---------------- KODEHÅNDTERING ---------------- */
+
+function cleanNumberCode(value) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "";
+  }
+
+  const digits =
+    String(value)
+      .replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  return digits;
+}
+
+
+function getCountyCode(feature) {
 
   const properties =
     feature.properties || {};
 
-  return String(
+  /*
+    Først prøver vi direkte fylkesnummer.
+  */
+
+  const directCountyCode =
+    getProperty(
+      properties,
+      [
+        "fylkesnummer",
+        "fylkesnr",
+        "fylke_nr",
+        "fylkeid",
+        "fylke_id",
+        "county_code",
+        "countycode"
+      ]
+    );
+
+  let code =
+    cleanNumberCode(
+      directCountyCode
+    );
+
+  if (code) {
+
+    if (code.length === 1) {
+      code = "0" + code;
+    }
+
+    return code.slice(0, 2);
+  }
+
+
+  /*
+    Hvis fylkesnummer ikke finnes,
+    bruker vi kommunenummeret.
+
+    Eksempel:
+    3107 → 31 → Østfold
+    3005 → 30 → gammelt system
+  */
+
+  const municipalityNumber =
+    getProperty(
+      properties,
+      [
+        "kommunenummer",
+        "kommunenr",
+        "kommune_nr",
+        "kommuneid",
+        "kommune_id",
+        "kommunenummer_",
+        "KOMMUNENUMMER",
+        "KOMMUNENR"
+      ]
+    );
+
+  code =
+    cleanNumberCode(
+      municipalityNumber
+    );
+
+  if (
+    code.length >= 4
+  ) {
+
+    return code.slice(0, 2);
+  }
+
+  return "";
+}
+
+
+/* ---------------- FYLKE FRA KOMMUNE ---------------- */
+
+function getMunicipalityCountyName(
+  feature
+) {
+
+  const properties =
+    feature.properties || {};
+
+  /*
+    Hvis GeoJSON-en faktisk har
+    fylkesnavnet, bruker vi det.
+  */
+
+  const directName =
     getProperty(
       properties,
       [
         "fylkesnavn",
         "fylkenavn",
-        "fylke",
         "fylkesnavn_",
         "Fylkesnavn",
-        "Fylke",
         "FYLKESNAVN",
-        "county",
-        "County",
-        "county_name",
-        "countyname",
         "navn_fylke",
-        "fylkesnavn2"
+        "county_name",
+        "countyname"
       ]
-    ) || ""
-  );
+    );
+
+  if (
+    directName !== null &&
+    directName !== undefined &&
+    String(directName).trim() !== ""
+  ) {
+
+    const text =
+      String(directName).trim();
+
+    /*
+      Hvis feltet allerede er
+      "Østfold", "Vestland" osv.
+    */
+
+    if (
+      /[a-zA-ZæøåÆØÅ]/.test(text)
+    ) {
+      return text;
+    }
+  }
+
+
+  /*
+    Noen datasett bruker bare
+    fylke/fylkesnummer.
+  */
+
+  const fylkeValue =
+    getProperty(
+      properties,
+      [
+        "fylke",
+        "Fylke",
+        "FYLKE",
+        "fylke_nr",
+        "fylkesnr",
+        "fylkesnummer"
+      ]
+    );
+
+  const fylkeText =
+    String(
+      fylkeValue || ""
+    ).trim();
+
+  if (
+    /[a-zA-ZæøåÆØÅ]/.test(
+      fylkeText
+    )
+  ) {
+
+    return fylkeText;
+  }
+
+
+  /*
+    Til slutt bruker vi fylkesnummer
+    eller de to første sifrene i
+    kommunenummeret.
+  */
+
+  const code =
+    getCountyCode(feature);
+
+  return COUNTY_CODES[code] || "";
 }
 
 
-function getMunicipalityName(feature) {
+/* ---------------- KOMMUNENAVN ---------------- */
+
+function getMunicipalityName(
+  feature
+) {
 
   const properties =
     feature.properties || {};
@@ -1006,17 +1217,130 @@ function getMunicipalityName(feature) {
       properties,
       [
         "kommunenavn",
-        "kommune",
-        "Kommunenavn",
-        "Kommune",
         "kommunenavn_",
+        "Kommunenavn",
+        "KOMMUNENAVN",
+        "kommune",
+        "Kommune",
+        "navn",
+        "Navn",
+        "NAME",
+        "name",
+        "NAME_2"
+      ]
+    ) || ""
+  ).trim();
+}
+
+
+/* ---------------- FYLKESNAVN FRA FYLKESKART ---------------- */
+
+function getCountyName(
+  feature
+) {
+
+  const properties =
+    feature.properties || {};
+
+  const value =
+    getProperty(
+      properties,
+      [
+        "fylkesnavn",
+        "fylkenavn",
+        "fylkesnavn_",
+        "Fylkesnavn",
+        "FYLKESNAVN",
+        "fylke",
+        "Fylke",
+        "FYLKE",
+        "county",
+        "County",
+        "county_name",
+        "countyname",
+        "navn_fylke",
         "navn",
         "Navn",
         "NAME",
         "name"
       ]
-    ) || ""
-  );
+    );
+
+  return String(
+    value || ""
+  ).trim();
+}
+
+
+/* ---------------- TILHØRER FYLKE ---------------- */
+
+function municipalityBelongsToCounty(
+  feature,
+  countyName
+) {
+
+  const wanted =
+    normalize(countyName);
+
+  /*
+    1. Prøv direkte fylkesnavn.
+  */
+
+  const direct =
+    normalize(
+      getMunicipalityCountyName(
+        feature
+      )
+    );
+
+  if (
+    direct &&
+    direct === wanted
+  ) {
+
+    return true;
+  }
+
+
+  /*
+    2. Prøv fylkesnummer.
+  */
+
+  const code =
+    getCountyCode(feature);
+
+  const codeCounty =
+    COUNTY_CODES[code];
+
+  if (
+    codeCounty &&
+    normalize(codeCounty) ===
+      wanted
+  ) {
+
+    return true;
+  }
+
+
+  /*
+    3. Sammenlign valgt fylkes
+    kode direkte.
+  */
+
+  const wantedCode =
+    COUNTY_NAME_TO_CODE[
+      wanted
+    ];
+
+  if (
+    wantedCode &&
+    code === wantedCode
+  ) {
+
+    return true;
+  }
+
+  return false;
 }
 
 
@@ -1073,6 +1397,7 @@ function drawMap(features) {
       f.geometry &&
       f.geometry.coordinates
     ) {
+
       scan(
         f.geometry.coordinates
       );
@@ -1263,6 +1588,21 @@ async function loadMaps() {
   drawMap(
     currentFeatures
   );
+
+  console.log(
+    "Fylker lastet:",
+    fylkeFeatures.length
+  );
+
+  console.log(
+    "Kommuner lastet:",
+    kommuneFeatures.length
+  );
+
+  console.log(
+    "Eksempel kommune:",
+    kommuneFeatures[0]?.properties
+  );
 }
 
 
@@ -1452,6 +1792,53 @@ function resetGame() {
       : "Skriv inn kommunene så raskt du kan.";
 
   input.focus();
+
+  gameStarted = true;
+
+  timerId =
+    setInterval(() => {
+
+      seconds--;
+
+      updateTimer();
+
+      if (seconds <= 0) {
+
+        clearInterval(
+          timerId
+        );
+
+        input.disabled =
+          true;
+
+        gameStarted =
+          false;
+
+        status.textContent =
+          "⏰ Tiden er ute!";
+
+        if (
+          found.size >=
+          Math.ceil(
+            currentTotal * 0.53
+          )
+        ) {
+
+          showResultScreen(
+            "almost",
+            found.size
+          );
+
+        } else {
+
+          showResultScreen(
+            "far",
+            found.size
+          );
+        }
+      }
+
+    }, 1000);
 }
 
 
@@ -1560,28 +1947,35 @@ function prepareSelectedCountyGame() {
     return false;
   }
 
-  const wantedCounty =
-    normalize(selectedCounty);
-
   /*
-    Vi sjekker ALLE feltene i properties.
-    Dermed spiller det ingen rolle hva
-    fylkesfeltet heter i GeoJSON-filen.
+    VIKTIG:
+    Her bruker vi ikke lenger
+    Object.values(properties).
+
+    Vi sjekker først fylkesnavn,
+    deretter fylkesnummer,
+    og til slutt kommunenummer.
   */
 
   const matchingFeatures =
-    kommuneFeatures.filter(feature => {
+    kommuneFeatures.filter(
+      feature =>
+        municipalityBelongsToCounty(
+          feature,
+          selectedCounty
+        )
+    );
 
-      const properties =
-        feature.properties || {};
 
-      return Object.values(properties).some(
-        value =>
-          normalize(value) ===
-          wantedCounty
-      );
+  console.log(
+    "Valgt fylke:",
+    selectedCounty
+  );
 
-    });
+  console.log(
+    "Fant kommuner:",
+    matchingFeatures.length
+  );
 
   if (
     matchingFeatures.length === 0
@@ -1600,6 +1994,7 @@ function prepareSelectedCountyGame() {
     return false;
   }
 
+
   currentFeatures =
     matchingFeatures;
 
@@ -1610,22 +2005,22 @@ function prepareSelectedCountyGame() {
       )
       .filter(Boolean);
 
+
   if (
     currentAnswerList.length === 0
   ) {
 
     status.textContent =
-      "Fant ingen kommunenavn i " +
-      selectedCounty +
-      ".";
+      "Fant kommunene, men kommunenavn mangler.";
 
     console.log(
-      "Fant fylket, men kommunenavn mangler:",
+      "Eksempel:",
       matchingFeatures[0]?.properties
     );
 
     return false;
   }
+
 
   currentTotal =
     currentAnswerList.length;
@@ -1733,23 +2128,30 @@ function openCountyPicker() {
 function chooseCounty(county) {
 
   /*
-    Samme robuste søk som brukes når
-    spillet faktisk starter.
+    Vi sjekker faktisk om dette fylket
+    har kommuner før vi godtar valget.
   */
 
   const matchingFeatures =
-    kommuneFeatures.filter(feature => {
+    kommuneFeatures.filter(
+      feature =>
+        municipalityBelongsToCounty(
+          feature,
+          county
+        )
+    );
 
-      const properties =
-        feature.properties || {};
 
-      return Object.values(properties).some(
-        value =>
-          normalize(value) ===
-          normalize(county)
-      );
+  console.log(
+    "Valgte fylke:",
+    county
+  );
 
-    });
+  console.log(
+    "Kommuner funnet:",
+    matchingFeatures.length
+  );
+
 
   if (
     matchingFeatures.length === 0
@@ -1761,21 +2163,25 @@ function chooseCounty(county) {
       ".";
 
     console.log(
-      "Fant ikke fylket. Eksempel på data:",
+      "Eksempel på kommune:",
       kommuneFeatures[0]?.properties
     );
 
     return;
   }
 
+
   /*
-    Fylket lagres.
-    Kommunequizen starter først
-    når man trykker Start.
+    Lagrer fylket.
   */
 
   selectedCounty =
     county;
+
+
+  /*
+    Tilbake til hovedmenyen.
+  */
 
   countyPicker.classList.add(
     "hidden"
@@ -1786,6 +2192,11 @@ function chooseCounty(county) {
   );
 
   input.disabled = true;
+
+
+  /*
+    Hovedkartet vises igjen i menyen.
+  */
 
   currentFeatures =
     fylkeFeatures;
@@ -1835,6 +2246,7 @@ function goToMenu() {
 
   gameStarted =
     false;
+
 
   currentFeatures =
     fylkeFeatures;
@@ -1948,7 +2360,7 @@ modeButtons.forEach(button => {
             "active",
             btn.dataset.mode ===
               chosenMode
-          )
+        )
       );
 
       updateMenuNote();
@@ -2279,7 +2691,23 @@ document
   .getElementById("restart")
   .addEventListener(
     "click",
-    resetGame
+    () => {
+
+      if (
+        selectedMode ===
+        "kommuner-fylke" &&
+        selectedCounty
+      ) {
+
+        startSelectedCountyGame();
+
+      } else {
+
+        resetGame();
+
+      }
+
+    }
   );
 
 
