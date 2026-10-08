@@ -980,8 +980,16 @@ function getCountyName(feature) {
         "fylkesnavn",
         "fylkenavn",
         "fylke",
+        "fylkesnavn_",
         "Fylkesnavn",
-        "Fylke"
+        "Fylke",
+        "FYLKESNAVN",
+        "county",
+        "County",
+        "county_name",
+        "countyname",
+        "navn_fylke",
+        "fylkesnavn2"
       ]
     ) || ""
   );
@@ -1000,7 +1008,12 @@ function getMunicipalityName(feature) {
         "kommunenavn",
         "kommune",
         "Kommunenavn",
-        "Kommune"
+        "Kommune",
+        "kommunenavn_",
+        "navn",
+        "Navn",
+        "NAME",
+        "name"
       ]
     ) || ""
   );
@@ -1541,36 +1554,34 @@ function startGame(
 
 /* ---------------- PREPARE COUNTY GAME ---------------- */
 
-/*
-  Denne funksjonen gjør klar kommunequizen
-  uten å starte timeren.
-
-  Det betyr at:
-  Velg fylke
-  ↓
-  Tilbake til meny
-  ↓
-  Start
-  ↓
-  kommunequiz
-*/
-
 function prepareSelectedCountyGame() {
 
   if (!selectedCounty) {
     return false;
   }
 
+  const wantedCounty =
+    normalize(selectedCounty);
+
+  /*
+    Vi sjekker ALLE feltene i properties.
+    Dermed spiller det ingen rolle hva
+    fylkesfeltet heter i GeoJSON-filen.
+  */
+
   const matchingFeatures =
-    kommuneFeatures.filter(
-      feature =>
-        normalize(
-          getCountyName(feature)
-        ) ===
-        normalize(
-          selectedCounty
-        )
-    );
+    kommuneFeatures.filter(feature => {
+
+      const properties =
+        feature.properties || {};
+
+      return Object.values(properties).some(
+        value =>
+          normalize(value) ===
+          wantedCounty
+      );
+
+    });
 
   if (
     matchingFeatures.length === 0
@@ -1580,6 +1591,11 @@ function prepareSelectedCountyGame() {
       "Fant ingen kommuner i " +
       selectedCounty +
       ".";
+
+    console.log(
+      "Eksempel på kommune-data:",
+      kommuneFeatures[0]?.properties
+    );
 
     return false;
   }
@@ -1602,6 +1618,11 @@ function prepareSelectedCountyGame() {
       "Fant ingen kommunenavn i " +
       selectedCounty +
       ".";
+
+    console.log(
+      "Fant fylket, men kommunenavn mangler:",
+      matchingFeatures[0]?.properties
+    );
 
     return false;
   }
@@ -1711,14 +1732,24 @@ function openCountyPicker() {
 
 function chooseCounty(county) {
 
+  /*
+    Samme robuste søk som brukes når
+    spillet faktisk starter.
+  */
+
   const matchingFeatures =
-    kommuneFeatures.filter(
-      feature =>
-        normalize(
-          getCountyName(feature)
-        ) ===
-        normalize(county)
-    );
+    kommuneFeatures.filter(feature => {
+
+      const properties =
+        feature.properties || {};
+
+      return Object.values(properties).some(
+        value =>
+          normalize(value) ===
+          normalize(county)
+      );
+
+    });
 
   if (
     matchingFeatures.length === 0
@@ -1729,13 +1760,18 @@ function chooseCounty(county) {
       county +
       ".";
 
+    console.log(
+      "Fant ikke fylket. Eksempel på data:",
+      kommuneFeatures[0]?.properties
+    );
+
     return;
   }
 
   /*
-    VIKTIG:
-    Her lagres bare fylket.
-    Kommunequizen starter IKKE her.
+    Fylket lagres.
+    Kommunequizen starter først
+    når man trykker Start.
   */
 
   selectedCounty =
@@ -1750,11 +1786,6 @@ function chooseCounty(county) {
   );
 
   input.disabled = true;
-
-  /*
-    Vi viser fortsatt fylkeskartet
-    i menyen.
-  */
 
   currentFeatures =
     fylkeFeatures;
@@ -1804,13 +1835,6 @@ function goToMenu() {
 
   gameStarted =
     false;
-
-  /*
-    selectedCounty beholdes.
-    Hvis for eksempel Østfold er valgt,
-    vil Start fortsatt starte Østfold
-    neste gang.
-  */
 
   currentFeatures =
     fylkeFeatures;
@@ -1918,13 +1942,6 @@ modeButtons.forEach(button => {
       selectedMode =
         chosenMode;
 
-      /*
-        Når man går tilbake til vanlig
-        fylkemodus, fjernes ikke fylket.
-        Det beholdes i bakgrunnen hvis
-        man senere velger kommune-fylke.
-      */
-
       modeButtons.forEach(
         btn =>
           btn.classList.toggle(
@@ -1993,19 +2010,10 @@ startGameButton.addEventListener(
   "click",
   () => {
 
-    /*
-      KOMMUNER I ET FYLKE
-    */
-
     if (
       selectedMode ===
       "kommuner-fylke"
     ) {
-
-      /*
-        Hvis fylke allerede er valgt,
-        start direkte på det fylket.
-      */
 
       if (selectedCounty) {
 
@@ -2016,19 +2024,10 @@ startGameButton.addEventListener(
           return;
         }
 
-        /*
-          Hvis fylket ikke kunne lastes,
-          åpnes velgeren igjen.
-        */
-
         openCountyPicker();
 
         return;
       }
-
-      /*
-        Ingen fylke valgt ennå.
-      */
 
       openCountyPicker();
 
@@ -2036,9 +2035,7 @@ startGameButton.addEventListener(
     }
 
 
-    /*
-      VANLIG FYLKEQUIZ
-    */
+    /* VANLIG FYLKEQUIZ */
 
     hideMenu();
 
