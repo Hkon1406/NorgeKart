@@ -837,16 +837,6 @@ const COUNTY_CODES = {
   "56": "Finnmark"
 };
 
-const COUNTY_NAME_TO_CODE = {};
-
-Object.entries(COUNTY_CODES).forEach(
-  ([code, name]) => {
-    COUNTY_NAME_TO_CODE[
-      normalize(name)
-    ] = code;
-  }
-);
-
 
 const DIFFICULTY_SETTINGS = {
   lett: {
@@ -1016,15 +1006,8 @@ function cleanNumberCode(value) {
     return "";
   }
 
-  const digits =
-    String(value)
-      .replace(/\D/g, "");
-
-  if (!digits) {
-    return "";
-  }
-
-  return digits;
+  return String(value)
+    .replace(/\D/g, "");
 }
 
 
@@ -1032,10 +1015,6 @@ function getCountyCode(feature) {
 
   const properties =
     feature.properties || {};
-
-  /*
-    Først prøver vi direkte fylkesnummer.
-  */
 
   const directCountyCode =
     getProperty(
@@ -1065,15 +1044,6 @@ function getCountyCode(feature) {
     return code.slice(0, 2);
   }
 
-
-  /*
-    Hvis fylkesnummer ikke finnes,
-    bruker vi kommunenummeret.
-
-    Eksempel:
-    3107 → 31 → Østfold
-    3005 → 30 → gammelt system
-  */
 
   const municipalityNumber =
     getProperty(
@@ -1115,11 +1085,6 @@ function getMunicipalityCountyName(
   const properties =
     feature.properties || {};
 
-  /*
-    Hvis GeoJSON-en faktisk har
-    fylkesnavnet, bruker vi det.
-  */
-
   const directName =
     getProperty(
       properties,
@@ -1144,11 +1109,6 @@ function getMunicipalityCountyName(
     const text =
       String(directName).trim();
 
-    /*
-      Hvis feltet allerede er
-      "Østfold", "Vestland" osv.
-    */
-
     if (
       /[a-zA-ZæøåÆØÅ]/.test(text)
     ) {
@@ -1156,11 +1116,6 @@ function getMunicipalityCountyName(
     }
   }
 
-
-  /*
-    Noen datasett bruker bare
-    fylke/fylkesnummer.
-  */
 
   const fylkeValue =
     getProperty(
@@ -1189,12 +1144,6 @@ function getMunicipalityCountyName(
     return fylkeText;
   }
 
-
-  /*
-    Til slutt bruker vi fylkesnummer
-    eller de to første sifrene i
-    kommunenummeret.
-  */
 
   const code =
     getCountyCode(feature);
@@ -1233,7 +1182,7 @@ function getMunicipalityName(
 }
 
 
-/* ---------------- FYLKESNAVN FRA FYLKESKART ---------------- */
+/* ---------------- FYLKESNAVN ---------------- */
 
 function getCountyName(
   feature
@@ -1282,10 +1231,6 @@ function municipalityBelongsToCounty(
   const wanted =
     normalize(countyName);
 
-  /*
-    1. Prøv direkte fylkesnavn.
-  */
-
   const direct =
     normalize(
       getMunicipalityCountyName(
@@ -1302,10 +1247,6 @@ function municipalityBelongsToCounty(
   }
 
 
-  /*
-    2. Prøv fylkesnummer.
-  */
-
   const code =
     getCountyCode(feature);
 
@@ -1316,25 +1257,6 @@ function municipalityBelongsToCounty(
     codeCounty &&
     normalize(codeCounty) ===
       wanted
-  ) {
-
-    return true;
-  }
-
-
-  /*
-    3. Sammenlign valgt fylkes
-    kode direkte.
-  */
-
-  const wantedCode =
-    COUNTY_NAME_TO_CODE[
-      wanted
-    ];
-
-  if (
-    wantedCode &&
-    code === wantedCode
   ) {
 
     return true;
@@ -1947,16 +1869,6 @@ function prepareSelectedCountyGame() {
     return false;
   }
 
-  /*
-    VIKTIG:
-    Her bruker vi ikke lenger
-    Object.values(properties).
-
-    Vi sjekker først fylkesnavn,
-    deretter fylkesnummer,
-    og til slutt kommunenummer.
-  */
-
   const matchingFeatures =
     kommuneFeatures.filter(
       feature =>
@@ -1965,17 +1877,6 @@ function prepareSelectedCountyGame() {
           selectedCounty
         )
     );
-
-
-  console.log(
-    "Valgt fylke:",
-    selectedCounty
-  );
-
-  console.log(
-    "Fant kommuner:",
-    matchingFeatures.length
-  );
 
   if (
     matchingFeatures.length === 0
@@ -1986,14 +1887,8 @@ function prepareSelectedCountyGame() {
       selectedCounty +
       ".";
 
-    console.log(
-      "Eksempel på kommune-data:",
-      kommuneFeatures[0]?.properties
-    );
-
     return false;
   }
-
 
   currentFeatures =
     matchingFeatures;
@@ -2005,7 +1900,6 @@ function prepareSelectedCountyGame() {
       )
       .filter(Boolean);
 
-
   if (
     currentAnswerList.length === 0
   ) {
@@ -2013,14 +1907,8 @@ function prepareSelectedCountyGame() {
     status.textContent =
       "Fant kommunene, men kommunenavn mangler.";
 
-    console.log(
-      "Eksempel:",
-      matchingFeatures[0]?.properties
-    );
-
     return false;
   }
-
 
   currentTotal =
     currentAnswerList.length;
@@ -2127,11 +2015,6 @@ function openCountyPicker() {
 
 function chooseCounty(county) {
 
-  /*
-    Vi sjekker faktisk om dette fylket
-    har kommuner før vi godtar valget.
-  */
-
   const matchingFeatures =
     kommuneFeatures.filter(
       feature =>
@@ -2140,18 +2023,6 @@ function chooseCounty(county) {
           county
         )
     );
-
-
-  console.log(
-    "Valgte fylke:",
-    county
-  );
-
-  console.log(
-    "Kommuner funnet:",
-    matchingFeatures.length
-  );
-
 
   if (
     matchingFeatures.length === 0
@@ -2162,26 +2033,11 @@ function chooseCounty(county) {
       county +
       ".";
 
-    console.log(
-      "Eksempel på kommune:",
-      kommuneFeatures[0]?.properties
-    );
-
     return;
   }
 
-
-  /*
-    Lagrer fylket.
-  */
-
   selectedCounty =
     county;
-
-
-  /*
-    Tilbake til hovedmenyen.
-  */
 
   countyPicker.classList.add(
     "hidden"
@@ -2192,11 +2048,6 @@ function chooseCounty(county) {
   );
 
   input.disabled = true;
-
-
-  /*
-    Hovedkartet vises igjen i menyen.
-  */
 
   currentFeatures =
     fylkeFeatures;
@@ -2246,7 +2097,6 @@ function goToMenu() {
 
   gameStarted =
     false;
-
 
   currentFeatures =
     fylkeFeatures;
@@ -2318,6 +2168,18 @@ modeButtons.forEach(button => {
       const chosenMode =
         button.dataset.mode;
 
+
+      /*
+        VIKTIG ENDRING:
+
+        Hver gang man trykker
+        "Kommuner i et fylke",
+        åpnes fylkevelgeren.
+
+        Dermed kan man velge
+        et nytt fylke etterpå.
+      */
+
       if (
         chosenMode ===
         "kommuner-fylke"
@@ -2335,10 +2197,11 @@ modeButtons.forEach(button => {
             )
         );
 
-        updateMenuNote();
+        openCountyPicker();
 
         return;
       }
+
 
       if (
         chosenMode !==
@@ -2360,7 +2223,7 @@ modeButtons.forEach(button => {
             "active",
             btn.dataset.mode ===
               chosenMode
-        )
+          )
       );
 
       updateMenuNote();
@@ -2446,8 +2309,6 @@ startGameButton.addEventListener(
       return;
     }
 
-
-    /* VANLIG FYLKEQUIZ */
 
     hideMenu();
 
