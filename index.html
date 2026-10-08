@@ -858,6 +858,9 @@ const foundMessage =
 const menu =
   document.getElementById("menu");
 
+const menuNote =
+  document.getElementById("menu-note");
+
 const modeButtons =
   document.querySelectorAll(".mode-btn");
 
@@ -1337,6 +1340,32 @@ function hideResultScreen() {
 
 /* ---------------- MENY ---------------- */
 
+function updateMenuNote() {
+
+  if (
+    selectedMode === "kommuner-fylke" &&
+    selectedCounty
+  ) {
+
+    menuNote.textContent =
+      "Valgt fylke: " +
+      selectedCounty +
+      ". Trykk Start for å begynne.";
+
+  } else if (
+    selectedMode === "kommuner-fylke"
+  ) {
+
+    menuNote.textContent =
+      "Velg et fylke før du trykker Start.";
+
+  } else {
+
+    menuNote.textContent =
+      "Velg en spillmodus for å starte.";
+  }
+}
+
 function showMenu() {
 
   hideResultScreen();
@@ -1356,8 +1385,7 @@ function showMenu() {
   foundMessage.style.display =
     "none";
 
-  status.textContent =
-    "Velg en spillmodus for å starte.";
+  updateMenuNote();
 }
 
 function hideMenu() {
@@ -1513,6 +1541,75 @@ function startGame(
 }
 
 
+/* ---------------- START SELECTED COUNTY GAME ---------------- */
+
+function startSelectedCountyGame() {
+
+  if (!selectedCounty) {
+    return false;
+  }
+
+  const matchingFeatures =
+    kommuneFeatures.filter(
+      feature =>
+        normalize(
+          getCountyName(feature)
+        ) ===
+        normalize(
+          selectedCounty
+        )
+    );
+
+  if (
+    matchingFeatures.length === 0
+  ) {
+
+    status.textContent =
+      "Fant ingen kommuner i dette fylket.";
+
+    return false;
+  }
+
+  currentFeatures =
+    matchingFeatures;
+
+  currentAnswerList =
+    matchingFeatures
+      .map(
+        getMunicipalityName
+      )
+      .filter(Boolean);
+
+  currentTotal =
+    currentAnswerList.length;
+
+  currentMapType =
+    "municipality";
+
+  gameTitle.textContent =
+    "🇳🇴 " +
+    selectedCounty;
+
+  input.placeholder =
+    "Skriv en kommune...";
+
+  score.innerHTML =
+    "<b>0</b> / " +
+    currentTotal +
+    " kommuner";
+
+  drawMap(
+    currentFeatures
+  );
+
+  hideMenu();
+
+  startGame();
+
+  return true;
+}
+
+
 /* ---------------- COUNTY PICKER ---------------- */
 
 function openCountyPicker() {
@@ -1571,9 +1668,6 @@ function openCountyPicker() {
 
 function chooseCounty(county) {
 
-  selectedCounty =
-    county;
-
   const matchingFeatures =
     kommuneFeatures.filter(
       feature =>
@@ -1587,49 +1681,56 @@ function chooseCounty(county) {
     matchingFeatures.length === 0
   ) {
 
-    status.textContent =
-      "Fant ingen kommuner i dette fylket.";
-
     return;
   }
 
-  currentFeatures =
-    matchingFeatures;
+  /*
+    Vi lagrer bare fylket her.
+    Spillet starter IKKE enda.
+  */
 
-  currentAnswerList =
-    matchingFeatures
-      .map(
-        getMunicipalityName
-      )
-      .filter(Boolean);
-
-  currentTotal =
-    currentAnswerList.length;
-
-  currentMapType =
-    "municipality";
+  selectedCounty =
+    county;
 
   countyPicker.classList.add(
     "hidden"
   );
 
+  menu.classList.remove(
+    "hidden"
+  );
+
+  input.disabled = true;
+
+  currentFeatures =
+    fylkeFeatures;
+
+  currentAnswerList =
+    COUNTIES;
+
+  currentTotal =
+    COUNTIES.length;
+
+  currentMapType =
+    "county";
+
   gameTitle.textContent =
-    "🇳🇴 " +
-    selectedCounty;
+    "🇳🇴 Fylkene";
 
   input.placeholder =
-    "Skriv en kommune...";
+    "Skriv et fylke...";
 
   score.innerHTML =
-    "<b>0</b> / " +
-    currentTotal +
-    " kommuner";
+    "<b>0</b> / 15 fylker";
 
   drawMap(
     currentFeatures
   );
 
-  startGame();
+  updateMenuNote();
+
+  status.textContent =
+    "Fylke valgt. Trykk Start når du er klar.";
 }
 
 
@@ -1650,8 +1751,8 @@ function goToMenu() {
 
   /*
     selectedCounty beholdes med vilje.
-    Da kan Start-knappen starte samme
-    fylke direkte igjen.
+    Dette gjør at samme fylke kan
+    startes igjen fra menyen.
   */
 
   currentFeatures =
@@ -1700,6 +1801,8 @@ function goToMenu() {
   status.textContent =
     "Velg en spillmodus for å starte.";
 
+  updateMenuNote();
+
   menu.classList.remove(
     "hidden"
   );
@@ -1734,10 +1837,7 @@ modeButtons.forEach(button => {
             )
         );
 
-        document.getElementById(
-          "menu-note"
-        ).textContent =
-          "Du velger fylke etter at du trykker Start.";
+        updateMenuNote();
 
         return;
       }
@@ -1765,10 +1865,7 @@ modeButtons.forEach(button => {
           )
       );
 
-      document.getElementById(
-        "menu-note"
-      ).textContent =
-        "Velg en spillmodus for å starte.";
+      updateMenuNote();
 
     }
   );
@@ -1811,6 +1908,8 @@ difficultyButtons.forEach(button => {
               selectedDifficulty
             ].label
           }`;
+
+        updateMenuNote();
       }
 
     }
@@ -1825,86 +1924,53 @@ startGameButton.addEventListener(
   "click",
   () => {
 
+    /*
+      KOMMUNER I ET FYLKE
+    */
+
     if (
       selectedMode ===
       "kommuner-fylke"
     ) {
 
       /*
-        Hvis et fylke allerede er valgt,
-        starter vi direkte på det fylket.
+        Hvis fylke allerede er valgt:
+        start direkte på dette fylket.
       */
 
       if (selectedCounty) {
 
-        const matchingFeatures =
-          kommuneFeatures.filter(
-            feature =>
-              normalize(
-                getCountyName(feature)
-              ) ===
-              normalize(
-                selectedCounty
-              )
-          );
+        const started =
+          startSelectedCountyGame();
 
-        if (
-          matchingFeatures.length === 0
-        ) {
-
-          openCountyPicker();
-
+        if (started) {
           return;
         }
 
-        hideMenu();
+        /*
+          Hvis noe gikk galt med det
+          valgte fylket, åpnes fylkevelgeren.
+        */
 
-        currentFeatures =
-          matchingFeatures;
-
-        currentAnswerList =
-          matchingFeatures
-            .map(
-              getMunicipalityName
-            )
-            .filter(Boolean);
-
-        currentTotal =
-          currentAnswerList.length;
-
-        currentMapType =
-          "municipality";
-
-        gameTitle.textContent =
-          "🇳🇴 " +
-          selectedCounty;
-
-        input.placeholder =
-          "Skriv en kommune...";
-
-        score.innerHTML =
-          "<b>0</b> / " +
-          currentTotal +
-          " kommuner";
-
-        drawMap(
-          currentFeatures
-        );
-
-        startGame();
+        openCountyPicker();
 
         return;
       }
 
       /*
-        Hvis ingen fylke er valgt,
-        åpnes fylkevelgeren.
+        Hvis ingen fylke er valgt:
+        må brukeren velge fylke først.
       */
 
       openCountyPicker();
 
       return;
     }
+
+
+    /*
+      VANLIG FYLKEQUIZ
+    */
 
     hideMenu();
 
@@ -1953,6 +2019,8 @@ countyPickerBack.addEventListener(
       "hidden"
     );
 
+    updateMenuNote();
+
   }
 );
 
@@ -1972,6 +2040,23 @@ resultRestartButton.addEventListener(
   () => {
 
     hideResultScreen();
+
+    /*
+      Hvis resultatet kom fra
+      kommunequiz, beholdes
+      selectedCounty og currentMapType.
+    */
+
+    if (
+      selectedMode ===
+      "kommuner-fylke" &&
+      selectedCounty
+    ) {
+
+      startSelectedCountyGame();
+
+      return;
+    }
 
     startGame();
 
