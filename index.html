@@ -564,8 +564,6 @@ button:hover {
 
 <body>
 
-<!-- MENY -->
-
 <div id="menu">
   <div class="menu-panel">
 
@@ -662,8 +660,6 @@ button:hover {
   </div>
 </div>
 
-<!-- FYLKEVALG -->
-
 <div id="countyPicker" class="hidden">
 
   <div class="county-picker-panel">
@@ -691,8 +687,6 @@ button:hover {
   </div>
 
 </div>
-
-<!-- RESULTATSBOKS -->
 
 <div id="resultOverlay" class="hidden">
 
@@ -938,7 +932,7 @@ let kommuneFeatures = [];
 
 function normalize(text) {
 
-  return text
+  return String(text || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(
@@ -973,6 +967,7 @@ function getProperty(properties, possibleNames) {
   return "";
 }
 
+
 function getCountyName(feature) {
 
   const properties =
@@ -992,6 +987,7 @@ function getCountyName(feature) {
   );
 }
 
+
 function getMunicipalityName(feature) {
 
   const properties =
@@ -1001,7 +997,6 @@ function getMunicipalityName(feature) {
     getProperty(
       properties,
       [
-        "kommunenavn",
         "kommunenavn",
         "kommune",
         "Kommunenavn",
@@ -1330,6 +1325,7 @@ function showResultScreen(
   }
 }
 
+
 function hideResultScreen() {
 
   resultOverlay.classList.add(
@@ -1366,6 +1362,7 @@ function updateMenuNote() {
   }
 }
 
+
 function showMenu() {
 
   hideResultScreen();
@@ -1387,6 +1384,7 @@ function showMenu() {
 
   updateMenuNote();
 }
+
 
 function hideMenu() {
 
@@ -1541,9 +1539,23 @@ function startGame(
 }
 
 
-/* ---------------- START SELECTED COUNTY GAME ---------------- */
+/* ---------------- PREPARE COUNTY GAME ---------------- */
 
-function startSelectedCountyGame() {
+/*
+  Denne funksjonen gjør klar kommunequizen
+  uten å starte timeren.
+
+  Det betyr at:
+  Velg fylke
+  ↓
+  Tilbake til meny
+  ↓
+  Start
+  ↓
+  kommunequiz
+*/
+
+function prepareSelectedCountyGame() {
 
   if (!selectedCounty) {
     return false;
@@ -1565,7 +1577,9 @@ function startSelectedCountyGame() {
   ) {
 
     status.textContent =
-      "Fant ingen kommuner i dette fylket.";
+      "Fant ingen kommuner i " +
+      selectedCounty +
+      ".";
 
     return false;
   }
@@ -1579,6 +1593,18 @@ function startSelectedCountyGame() {
         getMunicipalityName
       )
       .filter(Boolean);
+
+  if (
+    currentAnswerList.length === 0
+  ) {
+
+    status.textContent =
+      "Fant ingen kommunenavn i " +
+      selectedCounty +
+      ".";
+
+    return false;
+  }
 
   currentTotal =
     currentAnswerList.length;
@@ -1602,6 +1628,21 @@ function startSelectedCountyGame() {
     currentFeatures
   );
 
+  return true;
+}
+
+
+/* ---------------- START SELECTED COUNTY GAME ---------------- */
+
+function startSelectedCountyGame() {
+
+  const prepared =
+    prepareSelectedCountyGame();
+
+  if (!prepared) {
+    return false;
+  }
+
   hideMenu();
 
   startGame();
@@ -1615,6 +1656,8 @@ function startSelectedCountyGame() {
 function openCountyPicker() {
 
   clearInterval(timerId);
+
+  gameStarted = false;
 
   hideResultScreen();
 
@@ -1681,12 +1724,18 @@ function chooseCounty(county) {
     matchingFeatures.length === 0
   ) {
 
+    status.textContent =
+      "Fant ingen kommuner i " +
+      county +
+      ".";
+
     return;
   }
 
   /*
-    Vi lagrer bare fylket her.
-    Spillet starter IKKE enda.
+    VIKTIG:
+    Her lagres bare fylket.
+    Kommunequizen starter IKKE her.
   */
 
   selectedCounty =
@@ -1701,6 +1750,11 @@ function chooseCounty(county) {
   );
 
   input.disabled = true;
+
+  /*
+    Vi viser fortsatt fylkeskartet
+    i menyen.
+  */
 
   currentFeatures =
     fylkeFeatures;
@@ -1730,7 +1784,9 @@ function chooseCounty(county) {
   updateMenuNote();
 
   status.textContent =
-    "Fylke valgt. Trykk Start når du er klar.";
+    "Fylke valgt: " +
+    selectedCounty +
+    ". Trykk Start.";
 }
 
 
@@ -1750,9 +1806,10 @@ function goToMenu() {
     false;
 
   /*
-    selectedCounty beholdes med vilje.
-    Dette gjør at samme fylke kan
-    startes igjen fra menyen.
+    selectedCounty beholdes.
+    Hvis for eksempel Østfold er valgt,
+    vil Start fortsatt starte Østfold
+    neste gang.
   */
 
   currentFeatures =
@@ -1798,10 +1855,15 @@ function goToMenu() {
   foundMessage.style.display =
     "none";
 
-  status.textContent =
-    "Velg en spillmodus for å starte.";
-
   updateMenuNote();
+
+  status.textContent =
+    selectedCounty &&
+    selectedMode === "kommuner-fylke"
+      ? "Valgt fylke: " +
+        selectedCounty +
+        ". Trykk Start."
+      : "Velg en spillmodus for å starte.";
 
   menu.classList.remove(
     "hidden"
@@ -1855,6 +1917,13 @@ modeButtons.forEach(button => {
 
       selectedMode =
         chosenMode;
+
+      /*
+        Når man går tilbake til vanlig
+        fylkemodus, fjernes ikke fylket.
+        Det beholdes i bakgrunnen hvis
+        man senere velger kommune-fylke.
+      */
 
       modeButtons.forEach(
         btn =>
@@ -1934,8 +2003,8 @@ startGameButton.addEventListener(
     ) {
 
       /*
-        Hvis fylke allerede er valgt:
-        start direkte på dette fylket.
+        Hvis fylke allerede er valgt,
+        start direkte på det fylket.
       */
 
       if (selectedCounty) {
@@ -1948,8 +2017,8 @@ startGameButton.addEventListener(
         }
 
         /*
-          Hvis noe gikk galt med det
-          valgte fylket, åpnes fylkevelgeren.
+          Hvis fylket ikke kunne lastes,
+          åpnes velgeren igjen.
         */
 
         openCountyPicker();
@@ -1958,8 +2027,7 @@ startGameButton.addEventListener(
       }
 
       /*
-        Hvis ingen fylke er valgt:
-        må brukeren velge fylke først.
+        Ingen fylke valgt ennå.
       */
 
       openCountyPicker();
@@ -2040,12 +2108,6 @@ resultRestartButton.addEventListener(
   () => {
 
     hideResultScreen();
-
-    /*
-      Hvis resultatet kom fra
-      kommunequiz, beholdes
-      selectedCounty og currentMapType.
-    */
 
     if (
       selectedMode ===
@@ -2227,7 +2289,12 @@ document
 /* ---------------- LOAD ---------------- */
 
 loadMaps()
-  .catch(() => {
+  .catch(error => {
+
+    console.error(
+      "Kartfeil:",
+      error
+    );
 
     status.textContent =
       "Kartet kunne ikke lastes.";
