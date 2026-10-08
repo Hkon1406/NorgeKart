@@ -1648,8 +1648,11 @@ function goToMenu() {
   gameStarted =
     false;
 
-  selectedCounty =
-    "";
+  /*
+    selectedCounty beholdes med vilje.
+    Da kan Start-knappen starte samme
+    fylke direkte igjen.
+  */
 
   currentFeatures =
     fylkeFeatures;
@@ -1826,6 +1829,77 @@ startGameButton.addEventListener(
       selectedMode ===
       "kommuner-fylke"
     ) {
+
+      /*
+        Hvis et fylke allerede er valgt,
+        starter vi direkte på det fylket.
+      */
+
+      if (selectedCounty) {
+
+        const matchingFeatures =
+          kommuneFeatures.filter(
+            feature =>
+              normalize(
+                getCountyName(feature)
+              ) ===
+              normalize(
+                selectedCounty
+              )
+          );
+
+        if (
+          matchingFeatures.length === 0
+        ) {
+
+          openCountyPicker();
+
+          return;
+        }
+
+        hideMenu();
+
+        currentFeatures =
+          matchingFeatures;
+
+        currentAnswerList =
+          matchingFeatures
+            .map(
+              getMunicipalityName
+            )
+            .filter(Boolean);
+
+        currentTotal =
+          currentAnswerList.length;
+
+        currentMapType =
+          "municipality";
+
+        gameTitle.textContent =
+          "🇳🇴 " +
+          selectedCounty;
+
+        input.placeholder =
+          "Skriv en kommune...";
+
+        score.innerHTML =
+          "<b>0</b> / " +
+          currentTotal +
+          " kommuner";
+
+        drawMap(
+          currentFeatures
+        );
+
+        startGame();
+
+        return;
+      }
+
+      /*
+        Hvis ingen fylke er valgt,
+        åpnes fylkevelgeren.
+      */
 
       openCountyPicker();
 
