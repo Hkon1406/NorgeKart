@@ -1184,13 +1184,35 @@ function getMunicipalityName(
 
 
 /* ---------------- FYLKESNAVN ---------------- */
+/*
+  VIKTIG:
+  Vi bruker fylkesnummer først.
 
-function getCountyName(
-  feature
-) {
+  Dette gjør at fylker som
+  Trøndelag (50),
+  Nordland (18),
+  Troms (55)
+  og Finnmark (56)
+  alltid får riktig navn,
+  selv om GeoJSON-filen bruker
+  et annet navnformat.
+*/
+
+function getCountyName(feature) {
 
   const properties =
     feature.properties || {};
+
+  const code =
+    getCountyCode(feature);
+
+  if (
+    code &&
+    COUNTY_CODES[code]
+  ) {
+
+    return COUNTY_CODES[code];
+  }
 
   const value =
     getProperty(
@@ -2168,18 +2190,6 @@ modeButtons.forEach(button => {
 
       const chosenMode =
         button.dataset.mode;
-
-
-      /*
-        VIKTIG ENDRING:
-
-        Hver gang man trykker
-        "Kommuner i et fylke",
-        åpnes fylkevelgeren.
-
-        Dermed kan man velge
-        et nytt fylke etterpå.
-      */
 
       if (
         chosenMode ===
